@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Direct Payments Return</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand: #0877ff;
+        --bg0: #0a1220;
+        --bg1: #0f172a;
+        --card: rgba(17, 28, 51, 0.82);
+        --border: rgba(148, 163, 184, 0.22);
+        --muted: #9fb1c8;
+        --text: #eaf0fb;
+        --ok: #21d685;
+        --err: #ff4d4f;
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        background: radial-gradient(900px 520px at 50% 0, #122043 0, var(--bg1) 55%, var(--bg0) 100%);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 16px;
+      }
+      .wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        position: relative;
+      }
+      .topbar {
+        max-width: 720px;
+        margin: 0 auto 10px auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .title {
+        margin: 0 0 8px;
+        font-size: 24px;
+        letter-spacing: 0.2px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .statusCard {
+        margin-top: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 14px;
+        background: rgba(12, 18, 34, 0.55);
+        padding: 18px;
+        backdrop-filter: blur(8px);
+      }
+      .statusLine {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 0;
+        border-bottom: 1px dashed rgba(148, 163, 184, 0.2);
+      }
+      .statusLine:last-child {
+        border-bottom: none;
+      }
+      .k {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .v {
+        font-weight: 800;
+        font-size: 16px;
+        text-align: right;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 7px 14px;
+        font-size: 14px;
+        font-weight: 800;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .badge.ok {
+        color: var(--ok);
+        border-color: rgba(33, 214, 133, 0.45);
+        background: rgba(33, 214, 133, 0.08);
+      }
+      .badge.err {
+        color: var(--err);
+        border-color: rgba(255, 77, 79, 0.45);
+        background: rgba(255, 77, 79, 0.08);
+      }
+      .badge.pending {
+        color: #fbbf24;
+        border-color: rgba(251, 191, 36, 0.45);
+        background: rgba(251, 191, 36, 0.08);
+      }
+      button {
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(12, 18, 34, 0.55);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 800;
+        transition: transform 0.12s ease, border-color 0.12s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(8, 119, 255, 0.45);
+      }
+      .btnRow {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btnPrimary {
+        background: linear-gradient(135deg, rgba(8, 119, 255, 1), rgba(59, 130, 246, 1));
+        border-color: rgba(120, 168, 255, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div>
+        <div style="font-weight: 900;">Myco Payments</div>
+        <div class="muted" style="font-size: 12px;">Direct Payments Return</div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="hero">
+        <h1 class="title">Payment Status</h1>
+        <div class="badge" style="border-color: rgba(8,119,255,0.45); color: #93c5fd; background: rgba(8,119,255,0.12);">Transaction Summary</div>
+      </div>
+
+      <div class="muted" style="margin-top: 8px;">Reading transaction result...</div>
+
+      <div id="txStatus" class="statusCard" style="margin-top: 12px;"></div>
+
+      <div class="btnRow">
+        <button class="btnPrimary" onclick="window.location.href='./index.html'">Back to Demo</button>
+        <button onclick="window.location.reload()">Refresh Status</button>
+      </div>
+    </div>
+
+    <script src="./config.js"></script>
+    <script>
+      const statusEl  = document.getElementById("txStatus");
+      const subtitleEl = document.querySelector(".muted");
+
+      function getQueryParam(name) {
+        return new URLSearchParams(window.location.search).get(name);
+      }
+
+      function renderStatus(transactionId, status) {
+        const s          = (status || "pending").toLowerCase();
+        const badgeClass = s === "completed" ? "ok" : s === "failed" ? "err" : "pending";
+        statusEl.innerHTML = `
+          <div class="statusLine">
+            <span class="k">Transaction ID</span>
+            <span class="v">${transactionId}</span>
+          </div>
+          <div class="statusLine">
+            <span class="k">Status</span>
+            <span class="badge ${badgeClass}">${s}</span>
+          </div>
+        `;
+      }
+
+      async function load() {
+        const transactionId = getQueryParam("transactionId");
+
+        if (!transactionId) {
+          statusEl.innerHTML =
+            '<div class="statusLine"><span class="k">Error</span><span class="v">No transactionId found in URL.</span></div>';
+          return;
+        }
+
+        // Poll the demo server's /status endpoint which was populated by
+        // the webhook payment-api sent to checkout.redirection.
+        const origin      = window.location.origin;
+        const maxAttempts = 15;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          subtitleEl.textContent = `Waiting for payment confirmation... (${attempt}/${maxAttempts})`;
+
+          try {
+            const res  = await fetch(`${origin}/status/${encodeURIComponent(transactionId)}`);
+            const data = await res.json();
+            const status = (data.status || "").toLowerCase();
+
+            if (status && status !== "pending") {
+              subtitleEl.textContent = "Payment result:";
+              renderStatus(transactionId, status);
+              return;
+            }
+          } catch (_) {
+            // network hiccup — keep polling
+          }
+
+          if (attempt < maxAttempts) {
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
+
+        // Timed out — show pending
+        subtitleEl.textContent = "Payment result:";
+        renderStatus(transactionId, "pending");
+      }
+
+      load();
+    </script>
+  </body>
+</html>
+

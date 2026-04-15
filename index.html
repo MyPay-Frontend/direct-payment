@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Direct Payments (Demo)</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --brand: #0877ff;
+      --bg0: #0a1220;
+      --bg1: #0f172a;
+      --card: rgba(17, 28, 51, 0.82);
+      --border: rgba(148, 163, 184, 0.22);
+      --muted: #a7b4cc;
+      --text: #eaf0fb;
+      --ok: #21d685;
+      --err: #ff4d4f;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(900px 520px at 50% 0, #122043 0, var(--bg1) 55%, var(--bg0) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    .topbar {
+      max-width: 980px;
+      margin: 0 auto 10px auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .packages {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .packages {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .package {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 14px;
+      background: rgba(12, 18, 34, 0.5);
+      padding: 14px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      user-select: none;
+    }
+
+    .package:hover {
+      transform: translateY(-1px);
+      border-color: rgba(8, 119, 255, 0.55);
+    }
+
+    .package.active {
+      border-color: rgba(8, 119, 255, 0.8);
+      box-shadow: 0 0 0 1px rgba(8, 119, 255, 0.4) inset;
+    }
+
+    .pkgTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .pkgName {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .pkgPrice {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .pkgMeta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 10px;
+      background: rgba(12, 18, 34, 0.65);
+      color: var(--text);
+      padding: 10px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(8, 119, 255, 0.7);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 760px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    button {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 12px;
+      background: rgba(12, 18, 34, 0.55);
+      color: var(--text);
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, rgba(8, 119, 255, 1), rgba(59, 130, 246, 1));
+      border-color: rgba(120, 168, 255, 0.9);
+      box-shadow: 0 14px 30px rgba(8, 119, 255, 0.18);
+    }
+
+    .hide {
+      display: none;
+    }
+
+    .flowOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      display: none;
+      place-items: center;
+      padding: 16px;
+      z-index: 9998;
+    }
+
+    .flowModal {
+      width: 100%;
+      max-width: 760px;
+      background: rgba(10, 18, 32, 0.96);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .flowHead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .iconBtn {
+      border: 1px solid rgba(148, 163, 184, 0.32);
+      background: rgba(12, 18, 34, 0.7);
+      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      font-size: 16px;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+
+    .modalOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      place-items: center;
+      padding: 16px;
+      z-index: 9999;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(10, 18, 32, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .modal .txt {
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="card" style="padding: 12px; border-radius: 14px;">
+      <div style="font-weight: 900;">Myco Payments</div>
+      <div style="color: var(--muted); font-size: 12px;">Direct Payments Demo</div>
+    </div>
+    <div style="color: var(--muted); font-size: 12px; font-weight: 700;">JazzCash + EasyPaisa + Stripe</div>
+  </div>
+
+  <div class="wrap">
+    <div class="card" id="step1Card">
+      <h1>External Direct Payments (Demo)</h1>
+
+      <h2>1) Select Package</h2>
+      <div class="packages">
+        <div class="package active" data-provider="easypaisa" data-amount="499" data-currency="PKR"
+          data-payment-type="recurring">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa Monthly Package</div>
+            <div class="pkgPrice">Rs 499</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR<br />One month package<br />After one month: automatic deduction Rs 50
+          </div>
+        </div>
+
+        <div class="package" data-provider="jazzcash" data-amount="499" data-currency="PKR"
+          data-payment-type="recurring">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash Monthly Package</div>
+            <div class="pkgPrice">Rs 499</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR<br />One month package<br />After one month: automatic deduction Rs 50
+          </div>
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button id="btnContinue" class="primary">Continue</button>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <div class="flowOverlay" id="flowOverlay">
+    <div class="flowModal">
+      <div class="flowHead">
+        <h3 style="margin: 0; font-size: 16px;">Payment Flow</h3>
+        <button id="btnCloseFlow" class="iconBtn" type="button">X</button>
+      </div>
+
+      <div class="card" id="step2Card">
+        <h2>2) Submit Phone</h2>
+        <div class="row">
+          <div>
+            <label>Mobile Number</label>
+            <input id="phoneNumber" placeholder="03xxxxxxxxx" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="email" placeholder="abc@test.com" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnSubmitPhone" class="primary">Submit</button>
+          <button id="btnBackToStart">Back</button>
+        </div>
+
+        <div class="status" id="status2"></div>
+      </div>
+
+      <div class="card hide" id="otpCard">
+        <h2 id="otpTitle">OTP</h2>
+        <div class="row">
+          <div>
+            <label>Enter OTP</label>
+            <input id="otp" placeholder="000000" inputmode="numeric" />
+          </div>
+          <div>
+            <label>Provider</label>
+            <input id="providerReadOnly" readonly />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnVerifyOtp" class="primary">Verify</button>
+          <button id="btnBackToStartFromOtp">Back</button>
+        </div>
+
+        <div class="status" id="statusOtp"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modal">
+      <h3 id="modalTitle" style="margin: 0 0 8px;">Result</h3>
+      <div class="txt" id="modalTxt"></div>
+      <div class="actions" style="justify-content: flex-end;">
+        <button id="modalOkBtn" class="primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
+  <script nonce="">
+    // Keep nonce empty for standalone demo.
+    if (!window.DIRECT_PAYMENTS_DEMO_CONFIG) {
+      throw new Error("DIRECT_PAYMENTS_DEMO_CONFIG is missing. Please edit config.js");
+    }
+
+    const CONFIG = window.DIRECT_PAYMENTS_DEMO_CONFIG;
+    if (!CONFIG.backendBaseUrl) throw new Error("backendBaseUrl is required in config.js");
+    if (!CONFIG.mycoApiKey) throw new Error("mycoApiKey is required in config.js");
+    if (!CONFIG.mycoPrivateKeyB64) throw new Error("mycoPrivateKeyB64 is required in config.js");
+    if (!CONFIG.demoUserId) throw new Error("demoUserId is required in config.js");
+    if (!CONFIG.demoVendorId) throw new Error("demoVendorId is required in config.js (used for transaction polling)");
+
+    const baseUrl = CONFIG.backendBaseUrl.replace(/\/$/, "");
+    const uiBaseUrl = (CONFIG.uiBaseUrl || window.location.origin).replace(/\/$/, "");
+    if (window.location.protocol === 'file:' && (!CONFIG.uiBaseUrl || String(CONFIG.uiBaseUrl).trim() === '')) {
+      throw new Error('Open this demo via http:// (do not open index.html directly as file://). Set uiBaseUrl in config.js.');
+    }
+    const successUrl = `${uiBaseUrl}/webhook`;
+    // Important: backend providers append `?transactionId=...` assuming returnUrl has no query already.
+    // So we must not include `?vendorId=...` here; return.html will use CONFIG.demoVendorId as fallback.
+    const returnUrl = `${uiBaseUrl}/return.html`;
+
+    const $ = (id) => document.getElementById(id);
+    let provider = "easypaisa";
+    let selectedPackageEl = document.querySelector(".package.active");
+    let sessionId = "";
+    let walletId = "";
+    let lastPhone = "";
+    let lastEmail = "";
+
+    function openFlowModal() {
+      $("flowOverlay").style.display = "grid";
+    }
+    function closeFlowModal() {
+      $("flowOverlay").style.display = "none";
+    }
+
+    function showStep2() {
+      $("step2Card").classList.remove("hide");
+      $("otpCard").classList.add("hide");
+    }
+
+    function showOtpStep() {
+      $("otpCard").classList.remove("hide");
+      $("step2Card").classList.add("hide");
+    }
+
+    function setStatus(el, text) {
+      if (!el) return;
+      el.textContent = text || "";
+    }
+
+    function showModal(kind, title, text, onOk) {
+      const overlay = $("modalOverlay");
+      $("modalTitle").textContent = title;
+      $("modalTxt").textContent = text || "";
+      if (kind === "ok") $("modalTxt").style.color = "var(--ok)";
+      else if (kind === "err") $("modalTxt").style.color = "var(--err)";
+      else $("modalTxt").style.color = "var(--muted)";
+      overlay.style.display = "grid";
+      $("modalOkBtn").onclick = () => {
+        overlay.style.display = "none";
+        closeFlowModal();
+        showStep2();
+        if (onOk) onOk();
+      };
+    }
+
+    document.querySelectorAll(".package").forEach((el) => {
+      el.addEventListener("click", () => {
+        document.querySelectorAll(".package").forEach((x) => x.classList.remove("active"));
+        el.classList.add("active");
+        selectedPackageEl = el;
+        provider = el.getAttribute("data-provider");
+      });
+    });
+
+    function generateObjectId() {
+      const ts = Math.floor(Date.now() / 1000).toString(16);
+      let random = "";
+      for (let i = 0; i < 16; i++) random += Math.floor(Math.random() * 16).toString(16);
+      return `${ts}${random}`.slice(0, 24);
+    }
+
+    function getNextMonthExpiryAt() {
+      const now = new Date();
+      const targetYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+      const targetMonth = (now.getMonth() + 1) % 12;
+      const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const day = Math.min(now.getDate(), lastDay);
+      const yyyy = String(targetYear).padStart(4, "0");
+      const mm = String(targetMonth + 1).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd} 05:00:00+05`;
+    }
+
+    function decodeBase64(value) {
+      try {
+        return atob(value || "");
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function generateSignature(data, timestamp) {
+      // Backend guard expects: JSON.stringify(body) + "|" + timestamp
+      const sgnString = `${JSON.stringify(data)}|${timestamp}`;
+      const mycoPrivateKeyPem = decodeBase64(CONFIG.mycoPrivateKeyB64);
+      if (!mycoPrivateKeyPem) throw new Error("MYCO private key is missing / not decodable");
+
+      const sign = new KJUR.crypto.Signature({ alg: "SHA256withRSA" });
+      sign.init(mycoPrivateKeyPem);
+      sign.updateHex(utf8tohex(sgnString));
+      const signatureHex = sign.sign();
+      return hextob64(signatureHex);
+    }
+
+    async function api(method, path, body) {
+      const xTimestamp = new Date().toISOString();
+      const xApiKey = CONFIG.mycoApiKey.trim();
+      const canonicalData = body ?? {};
+      const xSignature = generateSignature(canonicalData, xTimestamp);
+
+      const res = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": xApiKey,
+          "X-Api-Signature": xSignature,
+          "X-Timestamp": xTimestamp,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      const txt = await res.text();
+      let data = null;
+      try {
+        data = JSON.parse(txt);
+      } catch (e) { }
+      if (!res.ok) throw new Error(data?.message || txt || `HTTP ${res.status}`);
+      return data;
+    }
+
+    async function waitForFinalTransactionStatus(transactionId, statusEl) {
+      const maxAttempts = 10; // ~30 seconds with 3s interval
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (statusEl) setStatus(statusEl, `Checking transaction status... (${attempt}/${maxAttempts})`);
+
+        const tx = await api(
+          "GET",
+          `/v1/payments/transactions/${encodeURIComponent(transactionId)}?vendorId=${encodeURIComponent(CONFIG.demoVendorId)}`
+        );
+        const t = tx?.data?.[0] || (Array.isArray(tx?.data) ? tx.data[0] : null) || null;
+        const status = String(t?.status || "").toLowerCase();
+
+        if (status && status !== "pending") return status;
+        if (attempt < maxAttempts) await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+      return "pending";
+    }
+
+    function setOtpTitle() {
+      if (provider === "jazzcash") $("otpTitle").textContent = "OTP (JazzCash)";
+      else $("otpTitle").textContent = "OTP (EasyPaisa)";
+    }
+
+    $("btnContinue").addEventListener("click", async () => {
+      try {
+        if (!selectedPackageEl) throw new Error("Please select a package");
+
+        provider = selectedPackageEl.getAttribute("data-provider");
+        const amount = Number(selectedPackageEl.getAttribute("data-amount") || "0");
+        const currency = selectedPackageEl.getAttribute("data-currency") || "PKR";
+        const reference = generateObjectId();
+        const paymentType = provider === "stripe" ? "onetime" : "recurring";
+
+        const createDto = {
+          paymentMethod: provider,
+          reference,
+          amount,
+          currency,
+          paymentType,
+          successUrl,
+          returnUrl,
+          user: { id: CONFIG.demoUserId },
+        };
+
+        if (provider === "easypaisa" || provider === "jazzcash") {
+          createDto.subscription = {
+            frequency: 30,
+            expiresAt: getNextMonthExpiryAt(),
+            price: 50,
+            referenceId: generateObjectId(),
+          };
+        }
+
+        setStatus($("status"), "Creating checkout session...");
+        const out = await api("POST", "/direct-payment/session", createDto);
+        if (!out?.success) throw new Error("Session creation failed");
+
+        // Stripe: hosted Checkout redirect
+        if (provider === "stripe" && out?.checkoutUrl) {
+          sessionId = out.checkoutId || "";
+          setStatus($("status"), "Redirecting to Stripe checkout...");
+          window.location.href = out.checkoutUrl;
+          return;
+        }
+
+        if (!out?.checkoutId) throw new Error("checkoutId is missing");
+        sessionId = out.checkoutId;
+        setStatus($("status"), `Session created. checkoutId: ${sessionId}`);
+        showStep2();
+        openFlowModal();
+      } catch (e) {
+        setStatus($("status"), `Error: ${String(e.message || e)}`);
+      }
+    });
+
+    $("btnCloseFlow").addEventListener("click", () => {
+      closeFlowModal();
+    });
+
+    $("btnBackToStart").addEventListener("click", () => {
+      showStep2();
+      closeFlowModal();
+      sessionId = "";
+      walletId = "";
+      lastPhone = "";
+      lastEmail = "";
+      setStatus($("status2"), "");
+      setStatus($("statusOtp"), "");
+    });
+
+    $("btnBackToStartFromOtp").addEventListener("click", () => {
+      showStep2();
+    });
+
+    $("btnSubmitPhone").addEventListener("click", async () => {
+      try {
+        if (provider === "stripe") throw new Error("Stripe does not use submit-phone in this demo UI.");
+        if (!sessionId) throw new Error("sessionId is missing");
+
+        lastPhone = $("phoneNumber").value.trim();
+        lastEmail = $("email").value.trim();
+
+        if (!lastPhone) throw new Error("phoneNumber is required");
+        if (!lastEmail) throw new Error("Email is required");
+
+        setStatus($("status2"), "Submitting phone...");
+        const out = await api("POST", "/direct-payment/validate-phone-number-status", {
+          paymentMethod: provider,
+          checkoutSessionId: sessionId,
+          phoneNumber: lastPhone,
+          email: provider === "easypaisa" ? lastEmail : undefined,
+        });
+
+        // Wallet already linked — make payment directly
+        if (out?.success === true && out?.action === "payment-required" && out?.walletId) {
+          walletId = out.walletId;
+          setStatus($("status2"), "Processing payment...");
+          const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
+          if (payOut?.transactionId) {
+            if (payOut.status === "completed") showModal("ok", "Payment Completed", "Payment has been completed successfully.");
+            else if (payOut.status === "pending") showModal("err", "Payment Pending", "Transaction is still pending. Please check again after a few seconds.");
+            else showModal("err", "Payment Failed", "Payment failed.");
+          } else {
+            showModal("err", "Payment Failed", payOut?.message || "Payment failed.");
+          }
+          return;
+        }
+
+        // Wallet found for another vendor — OTP already sent by backend, show OTP step
+        if (out?.success === true && out?.action === "otp-required" && out?.walletId) {
+          walletId = out.walletId;
+          setOtpTitle();
+          showOtpStep();
+          $("providerReadOnly").value = provider;
+          setStatus($("statusOtp"), "OTP sent to your number. Please enter OTP below.");
+          return;
+        }
+
+        // First-time JazzCash user — backend handles redirect to JazzCash page
+        if (out?.success === true && out?.redirectUrl && provider === "jazzcash") {
+          setStatus($("status2"), "Redirecting to JazzCash...");
+
+          // optional modal (nice UX)
+          showModal("ok", "Redirecting...", "Redirecting to JazzCash Page", () => {
+            window.location.href = out.redirectUrl;
+          });
+
+          // OR direct redirect (without modal)
+          // window.location.href = out.redirectUrl;
+
+          return;
+        }
+
+        // First-time EasyPaisa user — OTP already sent by requiredOtpForEasyPaisa, show OTP linking screen
+        if (out?.success === true && out?.action === "wallet-linking-required" && provider === "easypaisa") {
+          walletId = "";
+          setOtpTitle();
+          showOtpStep();
+          $("providerReadOnly").value = provider;
+          $("otpTitle").textContent = "OTP (EasyPaisa Linking)";
+          setStatus($("statusOtp"), "OTP sent to your phone number. Please enter OTP to verify.");
+          return;
+        }
+
+        if (out?.success === false) {
+          showModal("err", "Payment Failed", out?.message || "Payment failed.");
+          return;
+        }
+
+        throw new Error(out?.message || `Unexpected response: ${JSON.stringify(out)}`);
+      } catch (e) {
+        setStatus($("status2"), `Error: ${String(e.message || e)}`);
+      }
+    });
+
+    $("btnVerifyOtp").addEventListener("click", async () => {
+      try {
+        if (provider === "stripe") throw new Error("Stripe does not use OTP in this demo UI.");
+
+        const otp = $("otp").value.trim();
+        if (!otp) throw new Error("OTP is required");
+
+        const phoneNumber = lastPhone;
+        const email = lastEmail;
+
+        setStatus($("statusOtp"), "Verifying OTP...");
+
+        // EasyPaisa linking-required => call initiate-wallet-linking with OTP
+        if (provider === "easypaisa" && $("otpTitle").textContent.includes("Linking")) {
+          if (!email) throw new Error("email is required for EasyPaisa linking");
+          const out = await api("POST", "/direct-payment/initiate-wallet-linking", {
+            paymentMethod: "easypaisa",
+            checkoutId: sessionId,
+            phoneNumber,
+            otp,
+            email,
+          });
+          if (out?.success === true) {
+            showModal("ok", "Payment Completed", out?.message || "Wallet linked and payment completed successfully.");
+            return;
+          }
+          showModal("err", "Payment Failed", out?.message || "Payment failed");
+          return;
+        }
+
+        // OTP required => verify-otp, then make-payment
+        if (!walletId) throw new Error("walletId is missing for OTP verification");
+        const out = await api("POST", "/direct-payment/validate-custom-otp", {
+          paymentMethod: provider,
+          checkoutId: sessionId,
+          phoneNumber,
+          otp,
+        });
+
+        if (out?.success === true) {
+          setStatus($("statusOtp"), "OTP verified. Processing payment...");
+          const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
+          if (payOut?.transactionId) {
+            if (payOut.status === "completed") showModal("ok", "Payment Completed", "Payment has been completed successfully.");
+            else if (payOut.status === "pending") showModal("err", "Payment Pending", "Transaction is still pending. Please check again after a few seconds.");
+            else showModal("err", "Payment Failed", "Payment failed.");
+          } else {
+            showModal("err", "Payment Failed", payOut?.message || "Payment failed.");
+          }
+          return;
+        }
+
+        if (out?.success === false) {
+          showModal("err", "OTP Verification Failed", out?.message || "OTP verification failed.");
+          return;
+        }
+
+        throw new Error(out?.message || `Unexpected response: ${JSON.stringify(out)}`);
+      } catch (e) {
+        setStatus($("statusOtp"), `Error: ${String(e.message || e)}`);
+      }
+    });
+  </script>
+
+
+</body>
+
+</html>
