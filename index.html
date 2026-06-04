@@ -360,7 +360,8 @@
     <div class="modal">
       <h3 id="modalTitle" style="margin: 0 0 8px;">Result</h3>
       <div class="txt" id="modalTxt"></div>
-      <div class="actions" style="justify-content: flex-end;">
+      <div class="actions" style="justify-content: flex-end; gap: 10px;">
+        <button id="modalRetryBtn" style="display:none; background:transparent; border:1px solid rgba(148,163,184,0.35); color:#a7b4cc;">Try Different Number</button>
         <button id="modalOkBtn" class="primary">OK</button>
       </div>
     </div>
@@ -421,7 +422,7 @@
       el.textContent = text || "";
     }
 
-    function showModal(kind, title, text, onOk) {
+    function showModal(kind, title, text, onOk, canRetry = false) {
       const overlay = $("modalOverlay");
       $("modalTitle").textContent = title;
       $("modalTxt").textContent = text || "";
@@ -429,7 +430,24 @@
       else if (kind === "err") $("modalTxt").style.color = "var(--err)";
       else $("modalTxt").style.color = "var(--muted)";
       overlay.style.display = "grid";
-      $("modalOkBtn").onclick = () => {
+
+      const retryBtn = $("modalRetryBtn");
+      const okBtn = $("modalOkBtn");
+
+      if (canRetry) {
+        retryBtn.style.display = "";
+        okBtn.textContent = "Close";
+        retryBtn.onclick = () => {
+          overlay.style.display = "none";
+          showStep2();
+          setStatus($("status2"), "");
+        };
+      } else {
+        retryBtn.style.display = "none";
+        okBtn.textContent = "OK";
+      }
+
+      okBtn.onclick = () => {
         overlay.style.display = "none";
         closeFlowModal();
         showStep2();
@@ -633,9 +651,9 @@
           if (payOut?.transactionId) {
             if (payOut.status === "completed") showModal("ok", "Payment Completed", "Payment has been completed successfully.");
             else if (payOut.status === "pending") showModal("err", "Payment Pending", "Transaction is still pending. Please check again after a few seconds.");
-            else showModal("err", "Payment Failed", "Payment failed.");
+            else showModal("err", "Payment Failed", "Payment failed. You can try with a different number.", null, true);
           } else {
-            showModal("err", "Payment Failed", payOut?.message || "Payment failed.");
+            showModal("err", "Payment Failed", payOut?.message || "Payment failed.", null, true);
           }
           return;
         }
@@ -732,9 +750,9 @@
           if (payOut?.transactionId) {
             if (payOut.status === "completed") showModal("ok", "Payment Completed", "Payment has been completed successfully.");
             else if (payOut.status === "pending") showModal("err", "Payment Pending", "Transaction is still pending. Please check again after a few seconds.");
-            else showModal("err", "Payment Failed", "Payment failed.");
+            else showModal("err", "Payment Failed", "Payment failed. You can try with a different number.", null, true);
           } else {
-            showModal("err", "Payment Failed", payOut?.message || "Payment failed.");
+            showModal("err", "Payment Failed", payOut?.message || "Payment failed.", null, true);
           }
           return;
         }
