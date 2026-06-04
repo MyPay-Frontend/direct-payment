@@ -732,7 +732,7 @@
             showModal("ok", "Payment Completed", out?.message || "Wallet linked and payment completed successfully.");
             return;
           }
-          showModal("err", "Payment Failed", out?.message || "Payment failed");
+          showModal("err", "Payment Failed", out?.message || "Payment failed.", null, true);
           return;
         }
 
