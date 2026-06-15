@@ -74,16 +74,56 @@
 
     .packages {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       margin-bottom: 12px;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 700px) {
       .packages {
         grid-template-columns: 1fr;
       }
     }
+
+    .sandboxInfo {
+      background: rgba(8, 119, 255, 0.07);
+      border: 1px solid rgba(8, 119, 255, 0.25);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .sandboxInfo strong {
+      color: var(--text);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-left: 6px;
+      vertical-align: middle;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-stunt { background: rgba(33, 214, 133, 0.18); color: #21d685; }
+    .badge-terminal { background: rgba(8, 119, 255, 0.18); color: #7ab4ff; }
+
+    .cycleRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .cycleRow:last-child { border-bottom: none; }
 
     .package {
       border: 1px solid rgba(148, 163, 184, 0.25);
@@ -274,27 +314,65 @@
       <h1>External Direct Payments (Demo)</h1>
 
       <h2>1) Select Package</h2>
+
+      <div class="sandboxInfo">
+        <strong>Sandbox Timing</strong> — renewal records fire at these intervals after checkout:<br />
+        <strong>Stunt</strong> fires at T+60 min &nbsp;|&nbsp;
+        <strong>Terminal 1</strong> at T+120 min &nbsp;|&nbsp;
+        <strong>Terminal 2</strong> at T+180 min &nbsp;|&nbsp; …<br />
+        Retry offsets (both stunt &amp; terminal): 25h→10 min &nbsp; 50h→20 min &nbsp; 75h→30 min &nbsp; 100h→40 min &nbsp; 125h→50 min
+      </div>
+
       <div class="packages">
-        <div class="package active" data-provider="easypaisa" data-amount="1" data-currency="PKR"
-          data-payment-type="recurring">
+        <div class="package active"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="5"
+          data-terminal-freq="30">
           <div class="pkgTop">
-            <div class="pkgName">EasyPaisa Monthly Package</div>
-            <div class="pkgPrice">Rs 1</div>
+            <div class="pkgName">EasyPaisa</div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
           </div>
-          <div class="pkgMeta">Currency: PKR<br />One month package<br />After one month: automatic deduction Rs 1
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial (Stunt) <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
+              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+            </div>
           </div>
+          <div class="pkgMeta">Stunt retry: [25,50,75,100,125] hrs (sandbox: 10 min each)<br />Terminal retry: [25,50,75,100,125] hrs (sandbox: 10 min each)</div>
         </div>
 
-        <div class="package" data-provider="jazzcash" data-amount="1" data-currency="PKR"
-          data-payment-type="recurring">
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="5"
+          data-terminal-freq="30">
           <div class="pkgTop">
-            <div class="pkgName">JazzCash Monthly Package</div>
-            <div class="pkgPrice">Rs 1</div>
+            <div class="pkgName">JazzCash</div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
           </div>
-          <div class="pkgMeta">Currency: PKR<br />One month package<br />After one month: automatic deduction Rs 1
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial (Stunt) <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
+              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+            </div>
           </div>
+          <div class="pkgMeta">Stunt retry: [25,50,75,100,125] hrs (sandbox: 10 min each)<br />Terminal retry: [25,50,75,100,125] hrs (sandbox: 10 min each)</div>
         </div>
-
       </div>
 
       <div class="actions">
@@ -472,16 +550,10 @@
       return `${ts}${random}`.slice(0, 24);
     }
 
-    function getNextMonthExpiryAt() {
-      const now = new Date();
-      const targetYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
-      const targetMonth = (now.getMonth() + 1) % 12;
-      const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
-      const day = Math.min(now.getDate(), lastDay);
-      const yyyy = String(targetYear).padStart(4, "0");
-      const mm = String(targetMonth + 1).padStart(2, "0");
-      const dd = String(day).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd} 05:00:00+05`;
+    function getExpiresAt(months = 3) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + months);
+      return d.toISOString();
     }
 
     function decodeBase64(value) {
@@ -559,15 +631,19 @@
         if (!selectedPackageEl) throw new Error("Please select a package");
 
         provider = selectedPackageEl.getAttribute("data-provider");
-        const amount = Number(selectedPackageEl.getAttribute("data-amount") || "0");
         const currency = selectedPackageEl.getAttribute("data-currency") || "PKR";
-        const reference = generateObjectId();
-        const paymentType = provider === "stripe" ? "onetime" : "recurring";
+        const paymentType = selectedPackageEl.getAttribute("data-payment-type") || "irregular-recurring";
+        const stuntPrice = Number(selectedPackageEl.getAttribute("data-stunt-price") || "1");
+        const stuntFreq  = Number(selectedPackageEl.getAttribute("data-stunt-freq")  || "1");
+        const termPrice  = Number(selectedPackageEl.getAttribute("data-terminal-price") || "100");
+        const termFreq   = Number(selectedPackageEl.getAttribute("data-terminal-freq")  || "30");
+        const reference  = generateObjectId();
+        const expiresAt  = getExpiresAt(3);
 
         const createDto = {
           paymentMethod: provider,
           reference,
-          amount,
+          amount: stuntPrice,
           currency,
           paymentType,
           successUrl,
@@ -577,10 +653,14 @@
 
         if (provider === "easypaisa" || provider === "jazzcash") {
           createDto.subscription = {
-            frequency: 30,
-            expiresAt: getNextMonthExpiryAt(),
-            price: 1,
             referenceId: generateObjectId(),
+            expiresAt,
+            cycles: [
+              { frequency: stuntFreq,  price: stuntPrice, expiresAt, isStunt: true  },
+              { frequency: termFreq,   price: termPrice,  expiresAt, isStunt: false },
+            ],
+            stuntRetryIntervals:    [25, 50, 75, 100, 125],
+            terminalRetryIntervals: [25, 50, 75, 100, 125],
           };
         }
 
