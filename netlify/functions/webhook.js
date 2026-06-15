@@ -17,6 +17,7 @@ exports.handler = async (event) => {
 
   try {
     const body   = JSON.parse(event.body || '{}');
+    console.log('[webhook] received payload:\n', JSON.stringify(body, null, 2));
     const txId   = body.transactionId;
     const status = (body.status ?? body.transaction?.status ?? '').toLowerCase();
 
