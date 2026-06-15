@@ -664,6 +664,7 @@
           };
         }
 
+        console.log("Checkout DTO:", JSON.stringify(createDto, null, 2));
         setStatus($("status"), "Creating checkout session...");
         const out = await api("POST", "/direct-payment/session", createDto);
         if (!out?.success) throw new Error("Session creation failed");
