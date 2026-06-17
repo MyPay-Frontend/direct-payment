@@ -373,6 +373,17 @@
           </div>
           <div class="pkgMeta">Stunt retry: [25,50,75,100,125] hrs (sandbox: 10 min each)<br />Terminal retry: [25,50,75,100,125] hrs (sandbox: 10 min each)</div>
         </div>
+
+        <div class="package" data-provider="stripe" data-amount="200" data-currency="PKR"
+          data-payment-type="onetime">
+          <div class="pkgTop">
+            <div class="pkgName">Stripe One-Time Package</div>
+            <div class="pkgPrice">Rs 200</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR<br />One-time payment<br />Hosted Stripe checkout (no recurring deduction)
+          </div>
+        </div>
+
       </div>
 
       <div class="actions">
@@ -466,7 +477,7 @@
     if (window.location.protocol === 'file:' && (!CONFIG.uiBaseUrl || String(CONFIG.uiBaseUrl).trim() === '')) {
       throw new Error('Open this demo via http:// (do not open index.html directly as file://). Set uiBaseUrl in config.js.');
     }
-    const successUrl = `${uiBaseUrl}/webhook`;
+    const successUrl = `https://webhook.site/6e017856-aca0-4051-b74e-9741fdc5230a`;
     // Important: backend providers append `?transactionId=...` assuming returnUrl has no query already.
     // So we must not include `?vendorId=...` here; return.html will use CONFIG.demoVendorId as fallback.
     const returnUrl = `${uiBaseUrl}/return.html`;

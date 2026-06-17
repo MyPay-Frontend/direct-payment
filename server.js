@@ -19,7 +19,7 @@ const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 
-const PORT = parseInt(process.env.PORT || '3001', 10);
+const PORT = parseInt(process.env.PORT || '3005', 10);
 
 // In-memory store: transactionId (reference) → status string
 const statusStore = {};
