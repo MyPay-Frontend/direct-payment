@@ -383,7 +383,7 @@
           <div class="pkgMeta">Currency: USD<br />One-time payment<br />Hosted Stripe checkout (no recurring deduction)
           </div>
         </div>
-        
+
 
       </div>
 
@@ -652,10 +652,16 @@
         const reference  = generateObjectId();
         const expiresAt  = getExpiresAt(3);
 
+        const STRIPE_MIN_AMOUNT = 200;
+        const stripeAmount = Math.max(
+          STRIPE_MIN_AMOUNT,
+          Number(selectedPackageEl.getAttribute("data-amount") || STRIPE_MIN_AMOUNT)
+        );
+
         const createDto = {
           paymentMethod: provider,
           reference,
-          amount: stuntPrice,
+          amount: provider === "stripe" ? stripeAmount : stuntPrice,
           currency,
           paymentType,
           successUrl,
