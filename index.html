@@ -676,17 +676,23 @@
         }
 
         console.log("Checkout DTO:", JSON.stringify(createDto, null, 2));
+
+        // Stripe: route through /checkouts (skips /direct-payment flow entirely)
+        if (provider === "stripe") {
+          setStatus($("status"), "Creating Stripe checkout...");
+          const stripeOut = await api("POST", "/checkouts", createDto);
+          if (!stripeOut?.success) {
+            throw new Error(stripeOut?.message || stripeOut?.myPayResponseDesc || "Stripe checkout creation failed");
+          }
+          if (!stripeOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+          setStatus($("status"), "Redirecting to Stripe checkout...");
+          window.location.href = stripeOut.checkoutUrl;
+          return;
+        }
+
         setStatus($("status"), "Creating checkout session...");
         const out = await api("POST", "/direct-payment/session", createDto);
         if (!out?.success) throw new Error("Session creation failed");
-
-        // Stripe: hosted Checkout redirect
-        if (provider === "stripe" && out?.checkoutUrl) {
-          sessionId = out.checkoutId || "";
-          setStatus($("status"), "Redirecting to Stripe checkout...");
-          window.location.href = out.checkoutUrl;
-          return;
-        }
 
         if (!out?.checkoutId) throw new Error("checkoutId is missing");
         sessionId = out.checkoutId;
