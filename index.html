@@ -303,7 +303,7 @@
 <body>
   <div class="topbar">
     <div class="card" style="padding: 12px; border-radius: 14px;">
-      <div style="font-weight: 900;">Myco Payments</div>
+      <div style="font-weight: 900;">Myco Payments Prod</div>
       <div style="color: var(--muted); font-size: 12px;">Direct Payments Demo</div>
     </div>
     <div style="color: var(--muted); font-size: 12px; font-weight: 700;">JazzCash + EasyPaisa + Swich Card + Stripe</div>
@@ -395,7 +395,6 @@
           <div class="pkgMeta">Currency: USD<br />One-time payment<br />Hosted Stripe checkout (no recurring deduction)
           </div>
         </div>
-         
 
       </div>
 
@@ -496,7 +495,7 @@
     if (window.location.protocol === 'file:' && (!CONFIG.uiBaseUrl || String(CONFIG.uiBaseUrl).trim() === '')) {
       throw new Error('Open this demo via http:// (do not open index.html directly as file://). Set uiBaseUrl in config.js.');
     }
-    const successUrl = `https://webhook.site/6e017856-aca0-4051-b74e-9741fdc5230a`;
+    const successUrl = `https://webhook.site/02707b9f-148b-4146-a53f-3617ba1073be`;
     // Important: backend providers append `?transactionId=...` assuming returnUrl has no query already.
     // So we must not include `?vendorId=...` here; return.html will use CONFIG.demoVendorId as fallback.
     const returnUrl = `${uiBaseUrl}/return.html`;
@@ -678,11 +677,17 @@
 
         const onetimeAmount = Number(selectedPackageEl.getAttribute("data-amount") || "0");
         const finalAmount = (provider === "swich-card" || provider === "stripe") ? onetimeAmount || stuntPrice : stuntPrice;
+        const STRIPE_MIN_AMOUNT = 200;
+        const stripeAmount = Math.max(
+          STRIPE_MIN_AMOUNT,
+          Number(selectedPackageEl.getAttribute("data-amount") || STRIPE_MIN_AMOUNT)
+        );
 
         const createDto = {
           paymentMethod: provider,
           reference,
           amount: finalAmount,
+          amount: provider === "stripe" ? stripeAmount : stuntPrice,
           currency,
           paymentType,
           successUrl,
