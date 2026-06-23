@@ -306,7 +306,7 @@
       <div style="font-weight: 900;">Myco Payments</div>
       <div style="color: var(--muted); font-size: 12px;">Direct Payments Demo</div>
     </div>
-    <div style="color: var(--muted); font-size: 12px; font-weight: 700;">JazzCash + EasyPaisa + Stripe</div>
+    <div style="color: var(--muted); font-size: 12px; font-weight: 700;">JazzCash + EasyPaisa + Swich Card + Stripe</div>
   </div>
 
   <div class="wrap">
@@ -374,6 +374,18 @@
           <div class="pkgMeta">Stunt retry: [25,50,75,100,125] hrs (sandbox: 10 min each)<br />Terminal retry: [25,50,75,100,125] hrs (sandbox: 10 min each)</div>
         </div>
 
+        <div class="package"
+          data-provider="swich-card"
+          data-currency="PKR"
+          data-payment-type="onetime"
+          data-amount="50">
+          <div class="pkgTop">
+            <div class="pkgName">Swich Card</div>
+            <div class="pkgPrice">Rs 50 <span style="font-size:13px;font-weight:400;color:var(--muted)">one-time</span></div>
+          </div>
+          <div class="pkgMeta">Currency: PKR<br />One-time card payment<br />Card registration via Swich Landing Page</div>
+        </div>
+
         <div class="package" data-provider="stripe" data-amount="200" data-currency="PKR"
           data-payment-type="onetime">
           <div class="pkgTop">
@@ -412,6 +424,12 @@
           <div>
             <label>Email</label>
             <input id="email" placeholder="abc@test.com" />
+          </div>
+        </div>
+        <div class="row hide" id="swichExtraFields">
+          <div>
+            <label>Full Name</label>
+            <input id="fullName" placeholder="Ali Khan" />
           </div>
         </div>
 
@@ -493,6 +511,11 @@
 
     function openFlowModal() {
       $("flowOverlay").style.display = "grid";
+      if (provider === "swich-card") {
+        $("swichExtraFields").classList.remove("hide");
+      } else {
+        $("swichExtraFields").classList.add("hide");
+      }
     }
     function closeFlowModal() {
       $("flowOverlay").style.display = "none";
@@ -635,6 +658,7 @@
 
     function setOtpTitle() {
       if (provider === "jazzcash") $("otpTitle").textContent = "OTP (JazzCash)";
+      else if (provider === "swich-card") $("otpTitle").textContent = "OTP (Swich Card)";
       else $("otpTitle").textContent = "OTP (EasyPaisa)";
     }
 
@@ -652,10 +676,13 @@
         const reference  = generateObjectId();
         const expiresAt  = getExpiresAt(3);
 
+        const onetimeAmount = Number(selectedPackageEl.getAttribute("data-amount") || "0");
+        const finalAmount = (provider === "swich-card" || provider === "stripe") ? onetimeAmount || stuntPrice : stuntPrice;
+
         const createDto = {
           paymentMethod: provider,
           reference,
-          amount: stuntPrice,
+          amount: finalAmount,
           currency,
           paymentType,
           successUrl,
@@ -688,6 +715,13 @@
           if (!stripeOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
           setStatus($("status"), "Redirecting to Stripe checkout...");
           window.location.href = stripeOut.checkoutUrl;
+          return;
+        }
+
+        // Swich Card: session deferred to btnSubmitPhone (needs full user object)
+        if (provider === "swich-card") {
+          showStep2();
+          openFlowModal();
           return;
         }
 
@@ -727,13 +761,45 @@
     $("btnSubmitPhone").addEventListener("click", async () => {
       try {
         if (provider === "stripe") throw new Error("Stripe does not use submit-phone in this demo UI.");
-        if (!sessionId) throw new Error("sessionId is missing");
 
         lastPhone = $("phoneNumber").value.trim();
         lastEmail = $("email").value.trim();
 
         if (!lastPhone) throw new Error("phoneNumber is required");
-        if (!lastEmail) throw new Error("Email is required");
+        if (!lastEmail && provider === "easypaisa") throw new Error("Email is required for EasyPaisa");
+
+        // Swich Card: create session here with full user object
+        if (provider === "swich-card") {
+          const fullName = $("fullName").value.trim();
+          if (!lastEmail) throw new Error("Email is required for Swich Card");
+          if (!fullName) throw new Error("Full Name is required for Swich Card");
+
+          const pkg = selectedPackageEl;
+          const swichDto = {
+            paymentMethod: "swich-card",
+            reference: generateObjectId(),
+            amount: Number(pkg.getAttribute("data-amount") || "50"),
+            currency: pkg.getAttribute("data-currency") || "PKR",
+            paymentType: pkg.getAttribute("data-payment-type") || "onetime",
+            successUrl,
+            returnUrl,
+            user: {
+              id: CONFIG.demoUserId,
+              email: lastEmail,
+              fullName,
+              phoneNumber: lastPhone,
+            },
+          };
+
+          setStatus($("status2"), "Creating Swich Card session...");
+          const sessionOut = await api("POST", "/direct-payment/session", swichDto);
+          if (!sessionOut?.success) throw new Error(sessionOut?.message || "Session creation failed");
+          if (!sessionOut?.checkoutId) throw new Error("checkoutId is missing");
+          sessionId = sessionOut.checkoutId;
+          setStatus($("status2"), `Session created. Submitting phone...`);
+        }
+
+        if (!sessionId) throw new Error("sessionId is missing");
 
         setStatus($("status2"), "Submitting phone...");
         const out = await api("POST", "/direct-payment/validate-phone-number-status", {
@@ -772,13 +838,20 @@
         if (out?.success === true && out?.redirectUrl && provider === "jazzcash") {
           setStatus($("status2"), "Redirecting to JazzCash...");
 
-          // optional modal (nice UX)
           showModal("ok", "Redirecting...", "Redirecting to JazzCash Page", () => {
             window.location.href = out.redirectUrl;
           });
 
-          // OR direct redirect (without modal)
-          // window.location.href = out.redirectUrl;
+          return;
+        }
+
+        // First-time Swich Card user — redirect to Swich Landing Page for card registration
+        if (out?.success === true && out?.redirectUrl && provider === "swich-card") {
+          setStatus($("status2"), "Redirecting to Swich Card payment page...");
+
+          showModal("ok", "Redirecting...", "Redirecting to Swich Card payment page to register your card.", () => {
+            window.location.href = out.redirectUrl;
+          });
 
           return;
         }
