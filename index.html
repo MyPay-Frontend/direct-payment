@@ -498,7 +498,7 @@
     const successUrl = `https://webhook.site/02707b9f-148b-4146-a53f-3617ba1073be`;
     // Important: backend providers append `?transactionId=...` assuming returnUrl has no query already.
     // So we must not include `?vendorId=...` here; return.html will use CONFIG.demoVendorId as fallback.
-    const returnUrl = `${uiBaseUrl}/return.html`;
+    const returnUrl = `https://google.com`;
 
     const $ = (id) => document.getElementById(id);
     let provider = "easypaisa";
