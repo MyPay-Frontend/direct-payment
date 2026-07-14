@@ -114,6 +114,7 @@
 
     .badge-stunt { background: rgba(33, 214, 133, 0.18); color: #21d685; }
     .badge-terminal { background: rgba(8, 119, 255, 0.18); color: #7ab4ff; }
+    .badge-recurring { background: rgba(255, 165, 0, 0.18); color: #ffa040; }
 
     .cycleRow {
       display: flex;
@@ -306,7 +307,7 @@
       <div style="font-weight: 900;">Myco Payments Prod</div>
       <div style="color: var(--muted); font-size: 12px;">Direct Payments Demo</div>
     </div>
-    <div style="color: var(--muted); font-size: 12px; font-weight: 700;">JazzCash + EasyPaisa + Swich Card + Stripe</div>
+    <div style="color: var(--muted); font-size: 12px; font-weight: 700;">JazzCash + EasyPaisa + Swich Card + Stripe + Paymob</div>
   </div>
 
   <div class="wrap">
@@ -375,6 +376,478 @@
         </div>
 
         <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="recurring"
+          data-has-cycles="true"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="300"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge badge-recurring">Recurring+Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">paymentType: recurring · 2 cycles · isStunt: true on first</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="recurring"
+          data-has-cycles="true"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="300"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge badge-recurring">Recurring+Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">paymentType: recurring · 2 cycles · isStunt: true on first</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="recurring"
+          data-stunt-price="5"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge badge-recurring">Recurring</span></div>
+            <div class="pkgPrice">Rs 5 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-recurring">Recurring</span></span>
+              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">paymentType: recurring &nbsp;·&nbsp; frequency: 30 days<br />expiresAt: today + 3 months</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="recurring"
+          data-stunt-price="5"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge badge-recurring">Recurring</span></div>
+            <div class="pkgPrice">Rs 5 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-recurring">Recurring</span></span>
+              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">paymentType: recurring &nbsp;·&nbsp; frequency: 30 days<br />expiresAt: today + 3 months</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-middle-price="200"
+          data-middle-freq="7"
+          data-terminal-price="500"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(180,0,255,0.15);color:#c084fc">3-Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Weekly <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 200 &nbsp;·&nbsp; 7 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 500 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">3 cycles · Bug test scenario</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-middle-price="200"
+          data-middle-freq="7"
+          data-terminal-price="500"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(180,0,255,0.15);color:#c084fc">3-Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Weekly <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 200 &nbsp;·&nbsp; 7 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 500 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">3 cycles · Bug test scenario</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-middle-price="100"
+          data-middle-freq="7"
+          data-middle2-price="300"
+          data-middle2-freq="15"
+          data-terminal-price="600"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(255,140,0,0.15);color:#ffaa40">4-Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 100 &nbsp;·&nbsp; 7 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 3 <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 15 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 600 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">4 cycles · Dynamic pricing test</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-middle-price="100"
+          data-middle-freq="7"
+          data-middle2-price="300"
+          data-middle2-freq="15"
+          data-terminal-price="600"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(255,140,0,0.15);color:#ffaa40">4-Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 100 &nbsp;·&nbsp; 7 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 3 <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 15 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 600 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">4 cycles · Dynamic pricing test</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="15"
+          data-middle-price="150"
+          data-middle-freq="30"
+          data-terminal-price="300"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(255,80,120,0.15);color:#ff6090">2-Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 15 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 150 &nbsp;·&nbsp; 30 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="15"
+          data-middle-price="150"
+          data-middle-freq="30"
+          data-terminal-price="300"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(255,80,120,0.15);color:#ff6090">2-Cycle</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 1 &nbsp;·&nbsp; 15 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
+              <span>Rs 150 &nbsp;·&nbsp; 30 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-no-stunt="true"
+          data-stunt-price="150"
+          data-stunt-freq="15"
+          data-terminal-price="300"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(0,180,100,0.15);color:#40d090">No-Stunt</span></div>
+            <div class="pkgPrice">Rs 150 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ 15 days</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Phase 1 <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 150 &nbsp;·&nbsp; 15 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 2 <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">No stunt · Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-no-stunt="true"
+          data-stunt-price="150"
+          data-stunt-freq="15"
+          data-terminal-price="300"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(0,180,100,0.15);color:#40d090">No-Stunt</span></div>
+            <div class="pkgPrice">Rs 150 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ 15 days</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Phase 1 <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 150 &nbsp;·&nbsp; 15 days</span>
+            </div>
+            <div class="cycleRow">
+              <span>Phase 2 <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">No stunt · Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-single-stunt="true"
+          data-stunt-price="50"
+          data-stunt-freq="15">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge badge-stunt">1-Stunt</span></div>
+            <div class="pkgPrice">Rs 50 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 50 &nbsp;·&nbsp; 15 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">Single stunt cycle · isStunt: true</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-single-stunt="true"
+          data-stunt-price="50"
+          data-stunt-freq="15">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge badge-stunt">1-Stunt</span></div>
+            <div class="pkgPrice">Rs 50 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-stunt">Stunt</span></span>
+              <span>Rs 50 &nbsp;·&nbsp; 15 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">Single stunt cycle · isStunt: true</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-single-cycle="true"
+          data-stunt-price="100"
+          data-stunt-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(0,210,210,0.15);color:#40e0d0">1-Cycle</span></div>
+            <div class="pkgPrice">Rs 100 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 100 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">Single cycle · No stunt · isStunt: false<br />Terminal retry: [25,50,75,100,125] hrs</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-single-cycle="true"
+          data-stunt-price="100"
+          data-stunt-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(0,210,210,0.15);color:#40e0d0">1-Cycle</span></div>
+            <div class="pkgPrice">Rs 100 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
+              <span>Rs 100 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">Single cycle · No stunt · isStunt: false<br />Terminal retry: [25,50,75,100,125] hrs</div>
+        </div>
+
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-flow="old"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="5"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(150,150,150,0.15);color:#a0a8b8">Old Flow</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial</span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly</span>
+              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">No isStunt · No retry intervals · NATS NAK flow</div>
+        </div>
+
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-flow="old"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="5"
+          data-terminal-freq="30">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(150,150,150,0.15);color:#a0a8b8">Old Flow</span></div>
+            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+          </div>
+          <div style="margin: 8px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial</span>
+              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly</span>
+              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+            </div>
+          </div>
+          <div class="pkgMeta">No isStunt · No retry intervals · NATS NAK flow</div>
+        </div>
+
+        <div class="package"
           data-provider="swich-card"
           data-currency="PKR"
           data-payment-type="onetime"
@@ -393,6 +866,16 @@
             <div class="pkgPrice">USD 200</div>
           </div>
           <div class="pkgMeta">Currency: USD<br />One-time payment<br />Hosted Stripe checkout (no recurring deduction)
+          </div>
+        </div>
+
+        <div class="package" data-provider="paymob" data-amount="100" data-currency="PKR"
+          data-payment-type="onetime">
+          <div class="pkgTop">
+            <div class="pkgName">Paymob One-Time Package</div>
+            <div class="pkgPrice">Rs 100</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR<br />One-time payment, card only<br />Hosted Paymob Unified Checkout (no recurring deduction yet)
           </div>
         </div>
 
@@ -495,7 +978,7 @@
     if (window.location.protocol === 'file:' && (!CONFIG.uiBaseUrl || String(CONFIG.uiBaseUrl).trim() === '')) {
       throw new Error('Open this demo via http:// (do not open index.html directly as file://). Set uiBaseUrl in config.js.');
     }
-    const successUrl = `https://webhook.site/02707b9f-148b-4146-a53f-3617ba1073be`;
+    const successUrl = `${uiBaseUrl}/return.html`;
     // Important: backend providers append `?transactionId=...` assuming returnUrl has no query already.
     // So we must not include `?vendorId=...` here; return.html will use CONFIG.demoVendorId as fallback.
     const returnUrl = `https://google.com`;
@@ -668,15 +1151,29 @@
         provider = selectedPackageEl.getAttribute("data-provider");
         const currency = selectedPackageEl.getAttribute("data-currency") || "PKR";
         const paymentType = selectedPackageEl.getAttribute("data-payment-type") || "irregular-recurring";
-        const stuntPrice = Number(selectedPackageEl.getAttribute("data-stunt-price") || "1");
-        const stuntFreq  = Number(selectedPackageEl.getAttribute("data-stunt-freq")  || "1");
+        const stuntPrice  = Number(selectedPackageEl.getAttribute("data-stunt-price") || "1");
+        const stuntFreq   = Number(selectedPackageEl.getAttribute("data-stunt-freq")  || "1");
+        const middlePriceAttr = selectedPackageEl.getAttribute("data-middle-price");
+        const middleFreqAttr  = selectedPackageEl.getAttribute("data-middle-freq");
+        const hasMiddleCycle  = !!middlePriceAttr && !!middleFreqAttr;
+        const middlePrice = hasMiddleCycle ? Number(middlePriceAttr) : null;
+        const middleFreq  = hasMiddleCycle ? Number(middleFreqAttr)  : null;
+        const middle2PriceAttr = selectedPackageEl.getAttribute("data-middle2-price");
+        const middle2FreqAttr  = selectedPackageEl.getAttribute("data-middle2-freq");
+        const hasMiddle2Cycle  = !!middle2PriceAttr && !!middle2FreqAttr;
+        const middle2Price = hasMiddle2Cycle ? Number(middle2PriceAttr) : null;
+        const middle2Freq  = hasMiddle2Cycle ? Number(middle2FreqAttr)  : null;
         const termPrice  = Number(selectedPackageEl.getAttribute("data-terminal-price") || "100");
         const termFreq   = Number(selectedPackageEl.getAttribute("data-terminal-freq")  || "30");
+        const isOldFlow      = selectedPackageEl.getAttribute("data-flow") === "old";
+        const isSingleCycle  = selectedPackageEl.getAttribute("data-single-cycle") === "true";
+        const isNoStunt      = selectedPackageEl.getAttribute("data-no-stunt") === "true";
+        const isSingleStunt  = selectedPackageEl.getAttribute("data-single-stunt") === "true";
         const reference  = generateObjectId();
         const expiresAt  = getExpiresAt(3);
 
         const onetimeAmount = Number(selectedPackageEl.getAttribute("data-amount") || "0");
-        const finalAmount = (provider === "swich-card" || provider === "stripe") ? onetimeAmount || stuntPrice : stuntPrice;
+        const finalAmount = (provider === "swich-card" || provider === "stripe" || provider === "paymob") ? onetimeAmount || stuntPrice : stuntPrice;
         const STRIPE_MIN_AMOUNT = 200;
         const stripeAmount = Math.max(
           STRIPE_MIN_AMOUNT,
@@ -687,7 +1184,7 @@
           paymentMethod: provider,
           reference,
           amount: finalAmount,
-          amount: provider === "stripe" ? stripeAmount : stuntPrice,
+          amount: provider === "stripe" ? stripeAmount : (provider === "paymob" ? (onetimeAmount || stuntPrice) : stuntPrice),
           currency,
           paymentType,
           successUrl,
@@ -695,17 +1192,67 @@
           user: { id: CONFIG.demoUserId },
         };
 
+        const hasCycles = selectedPackageEl.getAttribute("data-has-cycles") === "true";
+
         if (provider === "easypaisa" || provider === "jazzcash") {
-          createDto.subscription = {
-            referenceId: generateObjectId(),
-            expiresAt,
-            cycles: [
-              { frequency: stuntFreq,  price: stuntPrice, expiresAt, isStunt: true  },
-              { frequency: termFreq,   price: termPrice,  expiresAt, isStunt: false },
-            ],
-            stuntRetryIntervals:    [25, 50, 75, 100, 125],
-            terminalRetryIntervals: [25, 50, 75, 100, 125],
-          };
+          if (paymentType === "recurring" && hasCycles) {
+            createDto.subscription = {
+              referenceId: generateObjectId(),
+              frequency: termFreq,
+              price: stuntPrice,
+              expiresAt,
+              cycles: [
+                { frequency: stuntFreq, price: stuntPrice, expiresAt, isStunt: true },
+                { frequency: termFreq,  price: termPrice,  expiresAt, isStunt: false },
+              ],
+              stuntRetryIntervals:    [25, 50, 75, 100, 125],
+              terminalRetryIntervals: [25, 50, 75, 100, 125],
+            };
+          } else if (paymentType === "recurring") {
+            createDto.subscription = {
+              referenceId: generateObjectId(),
+              frequency: termFreq,
+              price: stuntPrice,
+              expiresAt,
+              stuntRetryIntervals:    [25, 50, 75, 100, 125],
+              terminalRetryIntervals: [25, 50, 75, 100, 125],
+            };
+          } else {
+            const cycles = isOldFlow
+              ? [
+                  { frequency: stuntFreq, price: stuntPrice, expiresAt },
+                  { frequency: termFreq,  price: termPrice,  expiresAt },
+                ]
+              : isSingleStunt
+              ? [
+                  { frequency: stuntFreq, price: stuntPrice, expiresAt, isStunt: true },
+                ]
+              : isSingleCycle
+              ? [
+                  { frequency: stuntFreq, price: stuntPrice, expiresAt, isStunt: false },
+                ]
+              : isNoStunt
+              ? [
+                  { frequency: stuntFreq, price: stuntPrice, expiresAt, isStunt: false },
+                  { frequency: termFreq,  price: termPrice,  expiresAt, isStunt: false },
+                ]
+              : [
+                  { frequency: stuntFreq, price: stuntPrice, expiresAt, isStunt: true },
+                  ...(hasMiddleCycle  ? [{ frequency: middleFreq,  price: middlePrice,  expiresAt, isStunt: false }] : []),
+                  ...(hasMiddle2Cycle ? [{ frequency: middle2Freq, price: middle2Price, expiresAt, isStunt: false }] : []),
+                  { frequency: termFreq, price: termPrice, expiresAt, isStunt: false },
+                ];
+
+            createDto.subscription = {
+              referenceId: generateObjectId(),
+              expiresAt,
+              cycles,
+              ...(isOldFlow ? {} : {
+                stuntRetryIntervals:    [25, 50, 75, 100, 125],
+                terminalRetryIntervals: [25, 50, 75, 100, 125],
+              }),
+            };
+          }
         }
 
         console.log("Checkout DTO:", JSON.stringify(createDto, null, 2));
@@ -720,6 +1267,19 @@
           if (!stripeOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
           setStatus($("status"), "Redirecting to Stripe checkout...");
           window.location.href = stripeOut.checkoutUrl;
+          return;
+        }
+
+        // Paymob: route through /checkouts (hosted Unified Checkout, card only, one-time)
+        if (provider === "paymob") {
+          setStatus($("status"), "Creating Paymob checkout...");
+          const paymobOut = await api("POST", "/checkouts", createDto);
+          if (!paymobOut?.success) {
+            throw new Error(paymobOut?.message || paymobOut?.myPayResponseDesc || "Paymob checkout creation failed");
+          }
+          if (!paymobOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+          setStatus($("status"), "Redirecting to Paymob checkout...");
+          window.location.href = paymobOut.checkoutUrl;
           return;
         }
 
@@ -830,8 +1390,8 @@
         }
 
         // Wallet found for another vendor — OTP already sent by backend, show OTP step
-        if (out?.success === true && out?.action === "otp-required" && out?.walletId) {
-          walletId = out.walletId;
+        if (out?.success === true && out?.action === "otp-required") {
+          walletId = "";
           setOtpTitle();
           showOtpStep();
           $("providerReadOnly").value = provider;
@@ -914,7 +1474,6 @@
         }
 
         // OTP required => verify-otp, then make-payment
-        if (!walletId) throw new Error("walletId is missing for OTP verification");
         const out = await api("POST", "/direct-payment/validate-custom-otp", {
           paymentMethod: provider,
           checkoutId: sessionId,
@@ -923,6 +1482,8 @@
         });
 
         if (out?.success === true) {
+          walletId = out.walletId;
+          if (!walletId) throw new Error("walletId missing in OTP verification response");
           setStatus($("statusOtp"), "OTP verified. Processing payment...");
           const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
           if (payOut?.transactionId) {
