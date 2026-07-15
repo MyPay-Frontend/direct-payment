@@ -30,7 +30,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post("/webhook", (req, res) => {
+// /api/webhook (matches Vercel's api/webhook.js path) and /webhook (legacy local
+// alias) both accepted, so successUrl = `${uiBaseUrl}/api/webhook` works the same
+// whether this is running locally via `node server.js` or deployed on Vercel.
+app.post(["/webhook", "/api/webhook"], (req, res) => {
 
   const body = req.body;
 

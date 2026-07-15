@@ -978,10 +978,15 @@
     if (window.location.protocol === 'file:' && (!CONFIG.uiBaseUrl || String(CONFIG.uiBaseUrl).trim() === '')) {
       throw new Error('Open this demo via http:// (do not open index.html directly as file://). Set uiBaseUrl in config.js.');
     }
-    const successUrl = `${uiBaseUrl}/return.html`;
+    // successUrl becomes checkout.redirection - the server-to-server webhook target
+    // payment-api POSTs the final transaction result to. Must be a JSON-handling
+    // endpoint, not a static HTML page.
+    const successUrl = `${uiBaseUrl}/api/webhook`;
+    // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
+    // after completing payment on the provider's hosted page.
     // Important: backend providers append `?transactionId=...` assuming returnUrl has no query already.
     // So we must not include `?vendorId=...` here; return.html will use CONFIG.demoVendorId as fallback.
-    const returnUrl = `https://google.com`;
+    const returnUrl = `${uiBaseUrl}/return.html`;
 
     const $ = (id) => document.getElementById(id);
     let provider = "easypaisa";
