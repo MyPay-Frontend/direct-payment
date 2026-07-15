@@ -8,8 +8,15 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/webhook",
       "dest": "/server.js"
+    },
+    {
+      "src": "/status/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "handle": "filesystem"
     }
   ]
 }
