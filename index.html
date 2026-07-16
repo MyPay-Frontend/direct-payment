@@ -4,190 +4,359 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Direct Payments (Demo)</title>
+  <title>MyPay Sandbox — Direct Payments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
   <style>
     :root {
-      --brand: #0877ff;
-      --bg0: #0a1220;
-      --bg1: #0f172a;
-      --card: rgba(17, 28, 51, 0.82);
-      --border: rgba(148, 163, 184, 0.22);
-      --muted: #a7b4cc;
-      --text: #eaf0fb;
-      --ok: #21d685;
-      --err: #ff4d4f;
-      --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+      --paper: #f3efe3;
+      --paper-2: #ece5d2;
+      --surface: #fffdf7;
+      --ink: #1c231f;
+      --ink-muted: #6b6a5c;
+      --rule: #d9d0b8;
+      --rule-strong: #c7bc9c;
+      --accent: #1f6f5c;
+      --accent-soft: #e1ede8;
+      --accent-ink: #0f4238;
+      --danger: #b1442f;
+      --danger-soft: #f6e6e0;
+      --ok: #1f6f5c;
+      --ok-soft: #e1ede8;
+      --pending: #9a6b1f;
+      --pending-soft: #f5ecd9;
+      --rail-easypaisa: #0f9d58;
+      --rail-jazzcash: #d64937;
+      --rail-stripe: #6558f5;
+      --rail-paymob: #1d8a8a;
+      --shadow-card: 0 1px 2px rgba(28, 35, 31, 0.04), 0 8px 24px rgba(28, 35, 31, 0.06);
+      --shadow-modal: 0 24px 70px rgba(15, 20, 17, 0.28);
+      --radius: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
+
+    html { -webkit-font-smoothing: antialiased; }
 
     body {
       margin: 0;
-      font-family: "DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(900px 520px at 50% 0, #122043 0, var(--bg1) 55%, var(--bg0) 100%);
-      color: var(--text);
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1100px 480px at 15% -10%, rgba(31, 111, 92, 0.07), transparent 60%),
+        var(--paper);
+      color: var(--ink);
       min-height: 100vh;
-      padding: 16px;
+      padding: 28px 16px 64px;
+      line-height: 1.5;
     }
 
-    .wrap {
-      max-width: 980px;
-      margin: 0 auto;
-      display: grid;
-      gap: 12px;
-    }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+    a { color: var(--accent-ink); }
+
+    .wrap { max-width: 640px; margin: 0 auto; }
 
     .topbar {
-      max-width: 980px;
-      margin: 0 auto 10px auto;
+      max-width: 640px;
+      margin: 0 auto 22px;
       display: flex;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
       gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand .eyebrow {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-ink);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .brand .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .brand .sub {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+
+    .rails {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .rails .rail-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .rails .rail-chip::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .rails .rail-chip.easypaisa::before { background: var(--rail-easypaisa); }
+    .rails .rail-chip.jazzcash::before { background: var(--rail-jazzcash); }
+    .rails .rail-chip.stripe::before { background: var(--rail-stripe); }
+    .rails .rail-chip.paymob::before { background: var(--rail-paymob); }
+
+    .hero {
+      margin-bottom: 26px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 27px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      max-width: 22ch;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 14.5px;
+      max-width: 52ch;
     }
 
     .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
-      box-shadow: var(--shadow);
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow-card);
     }
 
-    h1 {
-      margin: 0 0 8px;
-      font-size: 18px;
-    }
-
-    h2 {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: var(--muted);
+    .section-label {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .packages {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    @media (max-width: 700px) {
-      .packages {
-        grid-template-columns: 1fr;
-      }
+    .section-label .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      font-size: 10.5px;
     }
 
     .sandboxInfo {
-      background: rgba(8, 119, 255, 0.07);
-      border: 1px solid rgba(8, 119, 255, 0.25);
+      background: var(--accent-soft);
+      border: 1px solid #c9ddd4;
       border-radius: 12px;
       padding: 12px 14px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       font-size: 12px;
-      color: var(--muted);
-      line-height: 1.8;
+      color: var(--accent-ink);
+      line-height: 1.75;
     }
 
-    .sandboxInfo strong {
-      color: var(--text);
-    }
+    .sandboxInfo strong { color: var(--ink); }
 
     .badge {
       display: inline-block;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 6px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 5px;
       margin-left: 6px;
       vertical-align: middle;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
     }
 
-    .badge-stunt { background: rgba(33, 214, 133, 0.18); color: #21d685; }
-    .badge-terminal { background: rgba(8, 119, 255, 0.18); color: #7ab4ff; }
-    .badge-recurring { background: rgba(255, 165, 0, 0.18); color: #ffa040; }
+    .badge-stunt { background: var(--ok-soft); color: var(--ok); }
+    .badge-terminal { background: #e6ecf7; color: #38538f; }
+    .badge-recurring { background: var(--pending-soft); color: var(--pending); }
 
     .cycleRow {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 5px 0;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      border-bottom: 1px dashed var(--rule);
+      font-size: 12.5px;
     }
 
     .cycleRow:last-child { border-bottom: none; }
 
+    .packages {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 560px) {
+      .packages { grid-template-columns: 1fr; }
+    }
+
     .package {
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: 14px;
-      background: rgba(12, 18, 34, 0.5);
-      padding: 14px;
+      position: relative;
+      border: 1px solid var(--rule);
+      border-left: 4px solid var(--rule-strong);
+      border-radius: 12px;
+      background: var(--paper-2);
+      padding: 13px 14px 13px 16px;
       cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
       user-select: none;
     }
 
+    .package[data-provider="easypaisa"] { border-left-color: var(--rail-easypaisa); }
+    .package[data-provider="jazzcash"] { border-left-color: var(--rail-jazzcash); }
+    .package[data-provider="stripe"] { border-left-color: var(--rail-stripe); }
+    .package[data-provider="paymob"] { border-left-color: var(--rail-paymob); }
+
     .package:hover {
       transform: translateY(-1px);
-      border-color: rgba(8, 119, 255, 0.55);
+      background: var(--surface);
+      box-shadow: var(--shadow-card);
     }
 
     .package.active {
-      border-color: rgba(8, 119, 255, 0.8);
-      box-shadow: 0 0 0 1px rgba(8, 119, 255, 0.4) inset;
+      background: var(--surface);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent) inset, var(--shadow-card);
     }
 
     .pkgTop {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 8px;
       margin-bottom: 8px;
     }
 
     .pkgName {
-      font-size: 16px;
-      font-weight: 800;
+      font-size: 14.5px;
+      font-weight: 700;
+      letter-spacing: -0.005em;
     }
 
     .pkgPrice {
-      font-size: 20px;
-      font-weight: 900;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 17px;
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .pkgMeta {
-      color: var(--muted);
-      font-size: 12px;
+      color: var(--ink-muted);
+      font-size: 11.5px;
       line-height: 1.6;
+    }
+
+    /* Signature element: a perforated tear-line, like a cheque/ticket stub edge,
+       marking the boundary between "choosing" and "acting". */
+    .tear {
+      position: relative;
+      height: 1px;
+      margin: 22px -22px 20px;
+      background-image: repeating-linear-gradient(to right, var(--rule-strong) 0 7px, transparent 7px 14px);
+    }
+
+    .tear::before, .tear::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+    }
+
+    .tear::before { left: 14px; }
+    .tear::after { right: 14px; }
+
+    .tear-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--surface);
+      padding: 0 10px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
     }
 
     label {
       display: block;
-      color: var(--muted);
-      font-size: 12px;
+      color: var(--ink-muted);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
       margin-bottom: 5px;
     }
 
+    label .req { color: var(--danger); }
+    label .opt { color: var(--ink-muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
     input {
       width: 100%;
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      border-radius: 10px;
-      background: rgba(12, 18, 34, 0.65);
-      color: var(--text);
-      padding: 10px;
+      border: 1px solid var(--rule-strong);
+      border-radius: 9px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 10px 11px;
+      font-size: 13.5px;
+      font-family: inherit;
       outline: none;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease;
     }
 
+    input::placeholder { color: #b8b09a; }
+
     input:focus {
-      border-color: rgba(8, 119, 255, 0.7);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
     }
 
     .row {
@@ -197,131 +366,207 @@
       margin-bottom: 10px;
     }
 
-    @media (max-width: 760px) {
-      .row {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 560px) {
+      .row { grid-template-columns: 1fr; }
     }
+
+    .fieldset-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      padding: 4px 0;
+      margin: 2px 0 12px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-ink);
+      cursor: pointer;
+    }
+
+    .fieldset-toggle .chev {
+      display: inline-block;
+      transition: transform 0.15s ease;
+      font-size: 10px;
+    }
+
+    .fieldset-toggle.open .chev { transform: rotate(90deg); }
 
     .actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 8px;
+      margin-top: 4px;
     }
 
     button {
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: 12px;
-      background: rgba(12, 18, 34, 0.55);
-      color: var(--text);
-      padding: 10px 12px;
+      border: 1px solid var(--rule-strong);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 11px 16px;
       cursor: pointer;
-      font-weight: 800;
+      font-weight: 700;
+      font-size: 13.5px;
+      font-family: inherit;
+      transition: transform 0.1s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover { border-color: var(--rule-strong); background: var(--paper-2); }
+    button:active { transform: translateY(1px); }
+
+    button:focus-visible, .package:focus-visible, input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     button.primary {
-      background: linear-gradient(135deg, rgba(8, 119, 255, 1), rgba(59, 130, 246, 1));
-      border-color: rgba(120, 168, 255, 0.9);
-      box-shadow: 0 14px 30px rgba(8, 119, 255, 0.18);
+      background: var(--accent);
+      border-color: var(--accent-ink);
+      color: #fdfdf7;
     }
 
-    .hide {
-      display: none;
+    button.primary:hover { background: var(--accent-ink); }
+
+    button.ghost {
+      background: transparent;
+      border-color: var(--rule);
+      color: var(--ink-muted);
     }
+
+    .hide { display: none !important; }
 
     .flowOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.72);
+      background: rgba(23, 26, 21, 0.45);
       display: none;
       place-items: center;
       padding: 16px;
       z-index: 9998;
+      backdrop-filter: blur(2px);
     }
 
     .flowModal {
       width: 100%;
-      max-width: 760px;
-      background: rgba(10, 18, 32, 0.96);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      max-width: 460px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-modal);
     }
 
     .flowHead {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .flowHead h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
     }
 
     .iconBtn {
-      border: 1px solid rgba(148, 163, 184, 0.32);
-      background: rgba(12, 18, 34, 0.7);
-      border-radius: 10px;
-      width: 36px;
-      height: 36px;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      border-radius: 9px;
+      width: 32px;
+      height: 32px;
       padding: 0;
-      font-size: 16px;
+      font-size: 14px;
+      line-height: 1;
     }
 
     .status {
-      margin-top: 10px;
-      font-size: 13px;
-      color: var(--muted);
+      margin-top: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: var(--ink-muted);
       white-space: pre-wrap;
+      line-height: 1.6;
     }
 
     .modalOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.65);
+      background: rgba(23, 26, 21, 0.45);
       display: none;
       place-items: center;
       padding: 16px;
       z-index: 9999;
+      backdrop-filter: blur(2px);
     }
 
     .modal {
       width: 100%;
-      max-width: 520px;
-      background: rgba(10, 18, 32, 0.92);
-      border: 1px solid var(--border);
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
       border-radius: 14px;
-      padding: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow-modal);
     }
 
+    .modal h3 { font-size: 16px; }
+
     .modal .txt {
-      color: var(--muted);
-      margin-bottom: 12px;
-      line-height: 1.5;
+      color: var(--ink-muted);
+      margin-bottom: 16px;
+      line-height: 1.55;
+      font-size: 13.5px;
+    }
+
+    footer.foot {
+      max-width: 640px;
+      margin: 26px auto 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: #a49f8c;
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
     }
   </style>
 </head>
 
 <body>
   <div class="topbar">
-    <div class="card" style="padding: 12px; border-radius: 14px;">
-      <div style="font-weight: 900;">Myco Payments Prod</div>
-      <div style="color: var(--muted); font-size: 12px;">Direct Payments Demo</div>
+    <div class="brand">
+      <div class="eyebrow">MyPay Sandbox</div>
+      <div class="sub">Direct payments testbed</div>
     </div>
-    <div style="color: var(--muted); font-size: 12px; font-weight: 700;">JazzCash + EasyPaisa + Swich Card + Stripe + Paymob</div>
+    <div class="rails">
+      <span class="rail-chip easypaisa">EasyPaisa</span>
+      <span class="rail-chip jazzcash">JazzCash</span>
+      <span class="rail-chip stripe">Stripe</span>
+      <span class="rail-chip paymob">Paymob</span>
+    </div>
   </div>
 
   <div class="wrap">
-    <div class="card" id="step1Card">
-      <h1>External Direct Payments (Demo)</h1>
+    <div class="hero">
+      <h1>Test a payment rail end to end</h1>
+      <p>Pick a rail below, fill in what it needs, and walk the real checkout path — hosted redirect, OTP, or billing details — through to a final status.</p>
+    </div>
 
-      <h2>1) Select Package</h2>
+    <div class="card" id="step1Card">
+      <div class="section-label"><span class="num">01</span>Choose a rail</div>
 
       <div class="sandboxInfo">
-        <strong>Sandbox Timing</strong> — renewal records fire at these intervals after checkout:<br />
-        <strong>Stunt</strong> fires at T+60 min &nbsp;|&nbsp;
-        <strong>Terminal 1</strong> at T+120 min &nbsp;|&nbsp;
-        <strong>Terminal 2</strong> at T+180 min &nbsp;|&nbsp; …<br />
-        Retry offsets (both stunt &amp; terminal): 25h→10 min &nbsp; 50h→20 min &nbsp; 75h→30 min &nbsp; 100h→40 min &nbsp; 125h→50 min
+        <strong>Sandbox timing</strong> — renewal records fire at these intervals after checkout:<br />
+        <strong>Stunt</strong> at T+60 min &nbsp;·&nbsp;
+        <strong>Terminal 1</strong> at T+120 min &nbsp;·&nbsp;
+        <strong>Terminal 2</strong> at T+180 min &nbsp;…<br />
+        Retry offsets (stunt &amp; terminal): 25h→10m &nbsp; 50h→20m &nbsp; 75h→30m &nbsp; 100h→40m &nbsp; 125h→50m
       </div>
 
       <div class="packages">
@@ -332,22 +577,23 @@
           data-stunt-price="1"
           data-stunt-freq="1"
           data-terminal-price="5"
-          data-terminal-freq="30">
+          data-terminal-freq="30"
+          tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">EasyPaisa</div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+            <div class="pkgPrice">Rs 1</div>
           </div>
-          <div style="margin: 8px 0 4px;">
+          <div style="margin: 6px 0 4px;">
             <div class="cycleRow">
-              <span>Trial (Stunt) <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+              <span>Trial (stunt) <span class="badge badge-stunt">Stunt</span></span>
+              <span class="mono">Rs 1 · 1d</span>
             </div>
             <div class="cycleRow">
               <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
-              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+              <span class="mono">Rs 5 · 30d</span>
             </div>
           </div>
-          <div class="pkgMeta">Stunt retry: [25,50,75,100,125] hrs (sandbox: 10 min each)<br />Terminal retry: [25,50,75,100,125] hrs (sandbox: 10 min each)</div>
+          <div class="pkgMeta">Stunt + terminal retries: 25/50/75/100/125h (sandbox: 10 min each)</div>
         </div>
 
         <div class="package"
@@ -357,529 +603,45 @@
           data-stunt-price="1"
           data-stunt-freq="1"
           data-terminal-price="5"
-          data-terminal-freq="30">
+          data-terminal-freq="30"
+          tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">JazzCash</div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
+            <div class="pkgPrice">Rs 1</div>
           </div>
-          <div style="margin: 8px 0 4px;">
+          <div style="margin: 6px 0 4px;">
             <div class="cycleRow">
-              <span>Trial (Stunt) <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
+              <span>Trial (stunt) <span class="badge badge-stunt">Stunt</span></span>
+              <span class="mono">Rs 1 · 1d</span>
             </div>
             <div class="cycleRow">
               <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
-              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
+              <span class="mono">Rs 5 · 30d</span>
             </div>
           </div>
-          <div class="pkgMeta">Stunt retry: [25,50,75,100,125] hrs (sandbox: 10 min each)<br />Terminal retry: [25,50,75,100,125] hrs (sandbox: 10 min each)</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="recurring"
-          data-has-cycles="true"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-terminal-price="300"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge badge-recurring">Recurring+Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">paymentType: recurring · 2 cycles · isStunt: true on first</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="recurring"
-          data-has-cycles="true"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-terminal-price="300"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge badge-recurring">Recurring+Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">paymentType: recurring · 2 cycles · isStunt: true on first</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="recurring"
-          data-stunt-price="5"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge badge-recurring">Recurring</span></div>
-            <div class="pkgPrice">Rs 5 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-recurring">Recurring</span></span>
-              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">paymentType: recurring &nbsp;·&nbsp; frequency: 30 days<br />expiresAt: today + 3 months</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="recurring"
-          data-stunt-price="5"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge badge-recurring">Recurring</span></div>
-            <div class="pkgPrice">Rs 5 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-recurring">Recurring</span></span>
-              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">paymentType: recurring &nbsp;·&nbsp; frequency: 30 days<br />expiresAt: today + 3 months</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-middle-price="200"
-          data-middle-freq="7"
-          data-terminal-price="500"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(180,0,255,0.15);color:#c084fc">3-Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Weekly <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 200 &nbsp;·&nbsp; 7 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 500 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">3 cycles · Bug test scenario</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-middle-price="200"
-          data-middle-freq="7"
-          data-terminal-price="500"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(180,0,255,0.15);color:#c084fc">3-Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Weekly <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 200 &nbsp;·&nbsp; 7 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 500 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">3 cycles · Bug test scenario</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-middle-price="100"
-          data-middle-freq="7"
-          data-middle2-price="300"
-          data-middle2-freq="15"
-          data-terminal-price="600"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(255,140,0,0.15);color:#ffaa40">4-Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 100 &nbsp;·&nbsp; 7 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 3 <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 15 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 600 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">4 cycles · Dynamic pricing test</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-middle-price="100"
-          data-middle-freq="7"
-          data-middle2-price="300"
-          data-middle2-freq="15"
-          data-terminal-price="600"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(255,140,0,0.15);color:#ffaa40">4-Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Stunt <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 100 &nbsp;·&nbsp; 7 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 3 <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 15 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 600 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">4 cycles · Dynamic pricing test</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-stunt-price="1"
-          data-stunt-freq="15"
-          data-middle-price="150"
-          data-middle-freq="30"
-          data-terminal-price="300"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(255,80,120,0.15);color:#ff6090">2-Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 15 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 150 &nbsp;·&nbsp; 30 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-stunt-price="1"
-          data-stunt-freq="15"
-          data-middle-price="150"
-          data-middle-freq="30"
-          data-terminal-price="300"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(255,80,120,0.15);color:#ff6090">2-Cycle</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Trial <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 1 &nbsp;·&nbsp; 15 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 2 <span class="badge badge-terminal">Middle</span></span>
-              <span>Rs 150 &nbsp;·&nbsp; 30 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-no-stunt="true"
-          data-stunt-price="150"
-          data-stunt-freq="15"
-          data-terminal-price="300"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(0,180,100,0.15);color:#40d090">No-Stunt</span></div>
-            <div class="pkgPrice">Rs 150 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ 15 days</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Phase 1 <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 150 &nbsp;·&nbsp; 15 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 2 <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">No stunt · Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-no-stunt="true"
-          data-stunt-price="150"
-          data-stunt-freq="15"
-          data-terminal-price="300"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(0,180,100,0.15);color:#40d090">No-Stunt</span></div>
-            <div class="pkgPrice">Rs 150 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ 15 days</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Phase 1 <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 150 &nbsp;·&nbsp; 15 days</span>
-            </div>
-            <div class="cycleRow">
-              <span>Phase 2 <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 300 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">No stunt · Day 15 → Rs 150 &nbsp;·&nbsp; Day 45 → Rs 300 (repeating)</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-single-stunt="true"
-          data-stunt-price="50"
-          data-stunt-freq="15">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge badge-stunt">1-Stunt</span></div>
-            <div class="pkgPrice">Rs 50 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 50 &nbsp;·&nbsp; 15 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">Single stunt cycle · isStunt: true</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-single-stunt="true"
-          data-stunt-price="50"
-          data-stunt-freq="15">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge badge-stunt">1-Stunt</span></div>
-            <div class="pkgPrice">Rs 50 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-stunt">Stunt</span></span>
-              <span>Rs 50 &nbsp;·&nbsp; 15 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">Single stunt cycle · isStunt: true</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-single-cycle="true"
-          data-stunt-price="100"
-          data-stunt-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(0,210,210,0.15);color:#40e0d0">1-Cycle</span></div>
-            <div class="pkgPrice">Rs 100 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 100 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">Single cycle · No stunt · isStunt: false<br />Terminal retry: [25,50,75,100,125] hrs</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-single-cycle="true"
-          data-stunt-price="100"
-          data-stunt-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(0,210,210,0.15);color:#40e0d0">1-Cycle</span></div>
-            <div class="pkgPrice">Rs 100 <span style="font-size:13px;font-weight:400;color:var(--muted)">/ month</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Monthly <span class="badge badge-terminal">Terminal</span></span>
-              <span>Rs 100 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">Single cycle · No stunt · isStunt: false<br />Terminal retry: [25,50,75,100,125] hrs</div>
-        </div>
-
-        <div class="package"
-          data-provider="easypaisa"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-flow="old"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-terminal-price="5"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">EasyPaisa <span class="badge" style="background:rgba(150,150,150,0.15);color:#a0a8b8">Old Flow</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Trial</span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly</span>
-              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">No isStunt · No retry intervals · NATS NAK flow</div>
-        </div>
-
-        <div class="package"
-          data-provider="jazzcash"
-          data-currency="PKR"
-          data-payment-type="irregular-recurring"
-          data-flow="old"
-          data-stunt-price="1"
-          data-stunt-freq="1"
-          data-terminal-price="5"
-          data-terminal-freq="30">
-          <div class="pkgTop">
-            <div class="pkgName">JazzCash <span class="badge" style="background:rgba(150,150,150,0.15);color:#a0a8b8">Old Flow</span></div>
-            <div class="pkgPrice">Rs 1 <span style="font-size:13px;font-weight:400;color:var(--muted)">trial</span></div>
-          </div>
-          <div style="margin: 8px 0 4px;">
-            <div class="cycleRow">
-              <span>Trial</span>
-              <span>Rs 1 &nbsp;·&nbsp; 1 day</span>
-            </div>
-            <div class="cycleRow">
-              <span>Monthly</span>
-              <span>Rs 5 &nbsp;·&nbsp; 30 days</span>
-            </div>
-          </div>
-          <div class="pkgMeta">No isStunt · No retry intervals · NATS NAK flow</div>
-        </div>
-
-        <div class="package"
-          data-provider="swich-card"
-          data-currency="PKR"
-          data-payment-type="onetime"
-          data-amount="50">
-          <div class="pkgTop">
-            <div class="pkgName">Swich Card</div>
-            <div class="pkgPrice">Rs 50 <span style="font-size:13px;font-weight:400;color:var(--muted)">one-time</span></div>
-          </div>
-          <div class="pkgMeta">Currency: PKR<br />One-time card payment<br />Card registration via Swich Landing Page</div>
+          <div class="pkgMeta">Stunt + terminal retries: 25/50/75/100/125h (sandbox: 10 min each)</div>
         </div>
 
         <div class="package" data-provider="stripe" data-amount="200" data-currency="PKR"
-          data-payment-type="onetime">
+          data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
-            <div class="pkgName">Stripe One-Time Package</div>
-            <div class="pkgPrice">USD 200</div>
+            <div class="pkgName">Stripe one-time</div>
+            <div class="pkgPrice">$200</div>
           </div>
-          <div class="pkgMeta">Currency: USD<br />One-time payment<br />Hosted Stripe checkout (no recurring deduction)
-          </div>
+          <div class="pkgMeta">Currency: USD · one-time payment<br />Hosted Stripe checkout, no recurring deduction</div>
         </div>
 
         <div class="package" data-provider="paymob" data-amount="100" data-currency="PKR"
-          data-payment-type="onetime">
+          data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
-            <div class="pkgName">Paymob One-Time Package</div>
+            <div class="pkgName">Paymob one-time</div>
             <div class="pkgPrice">Rs 100</div>
           </div>
-          <div class="pkgMeta">Currency: PKR<br />One-time payment, card only<br />Hosted Paymob Unified Checkout (no recurring deduction yet)
-          </div>
+          <div class="pkgMeta">Currency: PKR · card only, one-time<br />Hosted Paymob Unified Checkout</div>
         </div>
-
       </div>
+
+      <div class="tear"><span class="tear-label">Tear off to continue</span></div>
 
       <div class="actions">
         <button id="btnContinue" class="primary">Continue</button>
@@ -889,59 +651,147 @@
     </div>
   </div>
 
+  <footer class="foot">mypay · payment-api sandbox — for internal testing only</footer>
+
   <div class="flowOverlay" id="flowOverlay">
     <div class="flowModal">
       <div class="flowHead">
-        <h3 style="margin: 0; font-size: 16px;">Payment Flow</h3>
-        <button id="btnCloseFlow" class="iconBtn" type="button">X</button>
+        <h3>Payment flow</h3>
+        <button id="btnCloseFlow" class="iconBtn" type="button" aria-label="Close">✕</button>
       </div>
 
-      <div class="card" id="step2Card">
-        <h2>2) Submit Phone</h2>
+      <div class="card" id="step2Card" style="padding:0; border:none; box-shadow:none;">
+        <div class="section-label"><span class="num">02</span>Verify your number</div>
         <div class="row">
           <div>
-            <label>Mobile Number</label>
+            <label>Mobile number <span class="req">*</span></label>
             <input id="phoneNumber" placeholder="03xxxxxxxxx" />
           </div>
           <div>
-            <label>Email</label>
+            <label>Email <span class="opt">(EasyPaisa: required)</span></label>
             <input id="email" placeholder="abc@test.com" />
           </div>
         </div>
         <div class="row hide" id="swichExtraFields">
           <div>
-            <label>Full Name</label>
+            <label>Full name <span class="req">*</span></label>
             <input id="fullName" placeholder="Ali Khan" />
           </div>
         </div>
 
         <div class="actions">
           <button id="btnSubmitPhone" class="primary">Submit</button>
-          <button id="btnBackToStart">Back</button>
+          <button id="btnBackToStart" class="ghost">Back</button>
         </div>
 
         <div class="status" id="status2"></div>
       </div>
 
-      <div class="card hide" id="otpCard">
-        <h2 id="otpTitle">OTP</h2>
+      <div class="card hide" id="otpCard" style="padding:0; border:none; box-shadow:none;">
+        <div class="section-label" id="otpTitle"><span class="num">03</span>Enter OTP</div>
         <div class="row">
           <div>
-            <label>Enter OTP</label>
+            <label>OTP <span class="req">*</span></label>
             <input id="otp" placeholder="000000" inputmode="numeric" />
           </div>
           <div>
-            <label>Provider</label>
+            <label>Rail</label>
             <input id="providerReadOnly" readonly />
           </div>
         </div>
 
         <div class="actions">
           <button id="btnVerifyOtp" class="primary">Verify</button>
-          <button id="btnBackToStartFromOtp">Back</button>
+          <button id="btnBackToStartFromOtp" class="ghost">Back</button>
         </div>
 
         <div class="status" id="statusOtp"></div>
+      </div>
+
+      <!-- Paymob billing details — required by Paymob's Create Intention API -->
+      <div class="card hide" id="paymobBillingCard" style="padding:0; border:none; box-shadow:none;">
+        <div class="section-label"><span class="num">02</span>Billing details for Paymob</div>
+        <div class="row">
+          <div>
+            <label>Email <span class="req">*</span></label>
+            <input id="paymobEmail" placeholder="customer@example.com" />
+          </div>
+          <div>
+            <label>Phone number <span class="req">*</span></label>
+            <input id="paymobPhone" placeholder="+923001234567" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>First name <span class="req">*</span></label>
+            <input id="paymobFirstName" placeholder="John" />
+          </div>
+          <div>
+            <label>Last name <span class="req">*</span></label>
+            <input id="paymobLastName" placeholder="Doe" />
+          </div>
+        </div>
+
+        <button type="button" class="fieldset-toggle" id="paymobAddressToggle" aria-expanded="false">
+          <span class="chev">›</span> Add billing address (optional)
+        </button>
+
+        <div class="hide" id="paymobAddressFields">
+          <div class="row">
+            <div>
+              <label>Apartment <span class="opt">optional</span></label>
+              <input id="paymobApartment" placeholder="NA" />
+            </div>
+            <div>
+              <label>Floor <span class="opt">optional</span></label>
+              <input id="paymobFloor" placeholder="NA" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Street <span class="opt">optional</span></label>
+              <input id="paymobStreet" placeholder="NA" />
+            </div>
+            <div>
+              <label>Building <span class="opt">optional</span></label>
+              <input id="paymobBuilding" placeholder="NA" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Shipping method <span class="opt">optional</span></label>
+              <input id="paymobShippingMethod" placeholder="NA" />
+            </div>
+            <div>
+              <label>Postal code <span class="opt">optional</span></label>
+              <input id="paymobPostalCode" placeholder="NA" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>City <span class="opt">optional</span></label>
+              <input id="paymobCity" placeholder="NA" />
+            </div>
+            <div>
+              <label>Country <span class="opt">optional</span></label>
+              <input id="paymobCountry" placeholder="NA" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>State / province <span class="opt">optional</span></label>
+              <input id="paymobState" placeholder="NA" />
+            </div>
+            <div></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnSubmitPaymobBilling" class="primary">Continue to Paymob</button>
+          <button id="btnBackToStartFromPaymob" class="ghost">Back</button>
+        </div>
+
+        <div class="status" id="statusPaymob"></div>
       </div>
     </div>
   </div>
@@ -951,13 +801,13 @@
       <h3 id="modalTitle" style="margin: 0 0 8px;">Result</h3>
       <div class="txt" id="modalTxt"></div>
       <div class="actions" style="justify-content: flex-end; gap: 10px;">
-        <button id="modalRetryBtn" style="display:none; background:transparent; border:1px solid rgba(148,163,184,0.35); color:#a7b4cc;">Try Different Number</button>
+        <button id="modalRetryBtn" class="ghost" style="display:none;">Try different number</button>
         <button id="modalOkBtn" class="primary">OK</button>
       </div>
     </div>
   </div>
- 
-  
+
+
   <script src="./config.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
   <script nonce="">
@@ -995,6 +845,9 @@
     let walletId = "";
     let lastPhone = "";
     let lastEmail = "";
+    // Holds the checkout DTO built by btnContinue for the Paymob flow, minus the
+    // billing-specific user fields - the billing form fills those in before submit.
+    let pendingPaymobDto = null;
 
     function openFlowModal() {
       $("flowOverlay").style.display = "grid";
@@ -1011,11 +864,19 @@
     function showStep2() {
       $("step2Card").classList.remove("hide");
       $("otpCard").classList.add("hide");
+      $("paymobBillingCard").classList.add("hide");
     }
 
     function showOtpStep() {
       $("otpCard").classList.remove("hide");
       $("step2Card").classList.add("hide");
+      $("paymobBillingCard").classList.add("hide");
+    }
+
+    function showPaymobBillingStep() {
+      $("paymobBillingCard").classList.remove("hide");
+      $("step2Card").classList.add("hide");
+      $("otpCard").classList.add("hide");
     }
 
     function setStatus(el, text) {
@@ -1028,8 +889,8 @@
       $("modalTitle").textContent = title;
       $("modalTxt").textContent = text || "";
       if (kind === "ok") $("modalTxt").style.color = "var(--ok)";
-      else if (kind === "err") $("modalTxt").style.color = "var(--err)";
-      else $("modalTxt").style.color = "var(--muted)";
+      else if (kind === "err") $("modalTxt").style.color = "var(--danger)";
+      else $("modalTxt").style.color = "var(--ink-muted)";
       overlay.style.display = "grid";
 
       const retryBtn = $("modalRetryBtn");
@@ -1063,6 +924,17 @@
         selectedPackageEl = el;
         provider = el.getAttribute("data-provider");
       });
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.click(); }
+      });
+    });
+
+    $("paymobAddressToggle").addEventListener("click", () => {
+      const btn = $("paymobAddressToggle");
+      const panel = $("paymobAddressFields");
+      const open = panel.classList.toggle("hide") === false;
+      btn.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", String(open));
     });
 
     function generateObjectId() {
@@ -1144,9 +1016,9 @@
     }
 
     function setOtpTitle() {
-      if (provider === "jazzcash") $("otpTitle").textContent = "OTP (JazzCash)";
-      else if (provider === "swich-card") $("otpTitle").textContent = "OTP (Swich Card)";
-      else $("otpTitle").textContent = "OTP (EasyPaisa)";
+      if (provider === "jazzcash") $("otpTitle").innerHTML = '<span class="num">03</span>Enter OTP (JazzCash)';
+      else if (provider === "swich-card") $("otpTitle").innerHTML = '<span class="num">03</span>Enter OTP (Swich Card)';
+      else $("otpTitle").innerHTML = '<span class="num">03</span>Enter OTP (EasyPaisa)';
     }
 
     $("btnContinue").addEventListener("click", async () => {
@@ -1275,16 +1147,13 @@
           return;
         }
 
-        // Paymob: route through /checkouts (hosted Unified Checkout, card only, one-time)
+        // Paymob: needs billing details (email, phone, first/last name) before we can
+        // call /checkouts - collect them in a dedicated step instead of submitting blind.
         if (provider === "paymob") {
-          setStatus($("status"), "Creating Paymob checkout...");
-          const paymobOut = await api("POST", "/checkouts", createDto);
-          if (!paymobOut?.success) {
-            throw new Error(paymobOut?.message || paymobOut?.myPayResponseDesc || "Paymob checkout creation failed");
-          }
-          if (!paymobOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
-          setStatus($("status"), "Redirecting to Paymob checkout...");
-          window.location.href = paymobOut.checkoutUrl;
+          pendingPaymobDto = createDto;
+          setStatus($("status"), "");
+          showPaymobBillingStep();
+          openFlowModal();
           return;
         }
 
@@ -1326,6 +1195,67 @@
 
     $("btnBackToStartFromOtp").addEventListener("click", () => {
       showStep2();
+    });
+
+    $("btnBackToStartFromPaymob").addEventListener("click", () => {
+      closeFlowModal();
+      pendingPaymobDto = null;
+      setStatus($("statusPaymob"), "");
+    });
+
+    $("btnSubmitPaymobBilling").addEventListener("click", async () => {
+      try {
+        if (!pendingPaymobDto) throw new Error("No pending Paymob checkout - please go back and select the package again.");
+
+        const email = $("paymobEmail").value.trim();
+        const phoneNumber = $("paymobPhone").value.trim();
+        const firstName = $("paymobFirstName").value.trim();
+        const lastName = $("paymobLastName").value.trim();
+
+        if (!email) throw new Error("Email is required for Paymob");
+        if (!phoneNumber) throw new Error("Phone number is required for Paymob");
+        if (!firstName) throw new Error("First name is required for Paymob");
+        if (!lastName) throw new Error("Last name is required for Paymob");
+
+        const optionalAddress = {
+          apartment: $("paymobApartment").value.trim(),
+          floor: $("paymobFloor").value.trim(),
+          street: $("paymobStreet").value.trim(),
+          building: $("paymobBuilding").value.trim(),
+          shippingMethod: $("paymobShippingMethod").value.trim(),
+          postalCode: $("paymobPostalCode").value.trim(),
+          city: $("paymobCity").value.trim(),
+          country: $("paymobCountry").value.trim(),
+          state: $("paymobState").value.trim(),
+        };
+        // Only include optional address fields that were actually filled in.
+        Object.keys(optionalAddress).forEach((k) => {
+          if (!optionalAddress[k]) delete optionalAddress[k];
+        });
+
+        const paymobDto = {
+          ...pendingPaymobDto,
+          user: {
+            id: CONFIG.demoUserId,
+            email,
+            phoneNumber,
+            firstName,
+            lastName,
+            ...optionalAddress,
+          },
+        };
+
+        setStatus($("statusPaymob"), "Creating Paymob checkout...");
+        const paymobOut = await api("POST", "/checkouts", paymobDto);
+        if (!paymobOut?.success) {
+          throw new Error(paymobOut?.message || paymobOut?.myPayResponseDesc || "Paymob checkout creation failed");
+        }
+        if (!paymobOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+        setStatus($("statusPaymob"), "Redirecting to Paymob checkout...");
+        window.location.href = paymobOut.checkoutUrl;
+      } catch (e) {
+        setStatus($("statusPaymob"), `Error: ${String(e.message || e)}`);
+      }
     });
 
     $("btnSubmitPhone").addEventListener("click", async () => {
@@ -1385,11 +1315,11 @@
           setStatus($("status2"), "Processing payment...");
           const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
           if (payOut?.transactionId) {
-            if (payOut.status === "completed") showModal("ok", "Payment Completed", "Payment has been completed successfully.");
-            else if (payOut.status === "pending") showModal("err", "Payment Pending", "Transaction is still pending. Please check again after a few seconds.");
-            else showModal("err", "Payment Failed", "Payment failed. You can try with a different number.", null, true);
+            if (payOut.status === "completed") showModal("ok", "Payment completed", "Payment has been completed successfully.");
+            else if (payOut.status === "pending") showModal("err", "Payment pending", "Transaction is still pending. Please check again after a few seconds.");
+            else showModal("err", "Payment failed", "Payment failed. You can try with a different number.", null, true);
           } else {
-            showModal("err", "Payment Failed", payOut?.message || "Payment failed.", null, true);
+            showModal("err", "Payment failed", payOut?.message || "Payment failed.", null, true);
           }
           return;
         }
@@ -1408,7 +1338,7 @@
         if (out?.success === true && out?.redirectUrl && provider === "jazzcash") {
           setStatus($("status2"), "Redirecting to JazzCash...");
 
-          showModal("ok", "Redirecting...", "Redirecting to JazzCash Page", () => {
+          showModal("ok", "Redirecting...", "Redirecting to JazzCash page", () => {
             window.location.href = out.redirectUrl;
           });
 
@@ -1432,13 +1362,13 @@
           setOtpTitle();
           showOtpStep();
           $("providerReadOnly").value = provider;
-          $("otpTitle").textContent = "OTP (EasyPaisa Linking)";
+          $("otpTitle").innerHTML = '<span class="num">03</span>Enter OTP (EasyPaisa linking)';
           setStatus($("statusOtp"), "OTP sent to your phone number. Please enter OTP to verify.");
           return;
         }
 
         if (out?.success === false) {
-          showModal("err", "Payment Failed", out?.message || "Payment failed.");
+          showModal("err", "Payment failed", out?.message || "Payment failed.");
           return;
         }
 
@@ -1461,7 +1391,7 @@
         setStatus($("statusOtp"), "Verifying OTP...");
 
         // EasyPaisa linking-required => call initiate-wallet-linking with OTP
-        if (provider === "easypaisa" && $("otpTitle").textContent.includes("Linking")) {
+        if (provider === "easypaisa" && $("otpTitle").textContent.includes("linking")) {
           if (!email) throw new Error("email is required for EasyPaisa linking");
           const out = await api("POST", "/direct-payment/initiate-wallet-linking", {
             paymentMethod: "easypaisa",
@@ -1471,10 +1401,10 @@
             email,
           });
           if (out?.success === true) {
-            showModal("ok", "Payment Completed", out?.message || "Wallet linked and payment completed successfully.");
+            showModal("ok", "Payment completed", out?.message || "Wallet linked and payment completed successfully.");
             return;
           }
-          showModal("err", "Payment Failed", out?.message || "Payment failed.", null, true);
+          showModal("err", "Payment failed", out?.message || "Payment failed.", null, true);
           return;
         }
 
@@ -1492,17 +1422,17 @@
           setStatus($("statusOtp"), "OTP verified. Processing payment...");
           const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
           if (payOut?.transactionId) {
-            if (payOut.status === "completed") showModal("ok", "Payment Completed", "Payment has been completed successfully.");
-            else if (payOut.status === "pending") showModal("err", "Payment Pending", "Transaction is still pending. Please check again after a few seconds.");
-            else showModal("err", "Payment Failed", "Payment failed. You can try with a different number.", null, true);
+            if (payOut.status === "completed") showModal("ok", "Payment completed", "Payment has been completed successfully.");
+            else if (payOut.status === "pending") showModal("err", "Payment pending", "Transaction is still pending. Please check again after a few seconds.");
+            else showModal("err", "Payment failed", "Payment failed. You can try with a different number.", null, true);
           } else {
-            showModal("err", "Payment Failed", payOut?.message || "Payment failed.", null, true);
+            showModal("err", "Payment failed", payOut?.message || "Payment failed.", null, true);
           }
           return;
         }
 
         if (out?.success === false) {
-          showModal("err", "OTP Verification Failed", out?.message || "OTP verification failed.");
+          showModal("err", "OTP verification failed", out?.message || "OTP verification failed.");
           return;
         }
 
