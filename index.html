@@ -1311,9 +1311,11 @@
 
         // Wallet already linked — make payment directly
         if (out?.success === true && out?.action === "payment-required" && out?.walletId) {
+          console.log("Response: ", out)
           walletId = out.walletId;
           setStatus($("status2"), "Processing payment...");
           const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
+          console.log("PayOut Response: ", payOut)
           if (payOut?.transactionId) {
             if (payOut.status === "completed") showModal("ok", "Payment completed", "Payment has been completed successfully.");
             else if (payOut.status === "pending") showModal("err", "Payment pending", "Transaction is still pending. Please check again after a few seconds.");
@@ -1401,6 +1403,7 @@
             email,
           });
           if (out?.success === true) {
+            console.log("Easypaisa Initiate :" , out)
             showModal("ok", "Payment completed", out?.message || "Wallet linked and payment completed successfully.");
             return;
           }
