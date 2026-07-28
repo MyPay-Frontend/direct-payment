@@ -1,293 +1,676 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Direct Payments Return</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --brand: #0877ff;
-        --bg0: #0a1220;
-        --bg1: #0f172a;
-        --card: rgba(17, 28, 51, 0.82);
-        --border: rgba(148, 163, 184, 0.22);
-        --muted: #9fb1c8;
-        --text: #eaf0fb;
-        --ok: #21d685;
-        --err: #ff4d4f;
-        --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        font-family: "DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        background: radial-gradient(900px 520px at 50% 0, #122043 0, var(--bg1) 55%, var(--bg0) 100%);
-        color: var(--text);
-        min-height: 100vh;
-        padding: 16px;
-      }
-      .wrap {
-        max-width: 720px;
-        margin: 0 auto;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 20px;
-        box-shadow: var(--shadow);
-        position: relative;
-      }
-      .topbar {
-        max-width: 720px;
-        margin: 0 auto 10px auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-      .title {
-        margin: 0 0 8px;
-        font-size: 24px;
-        letter-spacing: 0.2px;
-      }
-      .muted {
-        color: var(--muted);
-      }
-      .statusCard {
-        margin-top: 14px;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        border-radius: 14px;
-        background: rgba(12, 18, 34, 0.55);
-        padding: 18px;
-        backdrop-filter: blur(8px);
-      }
-      .statusLine {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 0;
-        border-bottom: 1px dashed rgba(148, 163, 184, 0.2);
-      }
-      .statusLine:last-child {
-        border-bottom: none;
-      }
-      .k {
-        color: var(--muted);
-        font-size: 14px;
-      }
-      .v {
-        font-weight: 800;
-        font-size: 16px;
-        text-align: right;
-      }
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        padding: 7px 14px;
-        font-size: 14px;
-        font-weight: 800;
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-      }
-      .badge.ok {
-        color: var(--ok);
-        border-color: rgba(33, 214, 133, 0.45);
-        background: rgba(33, 214, 133, 0.08);
-      }
-      .badge.err {
-        color: var(--err);
-        border-color: rgba(255, 77, 79, 0.45);
-        background: rgba(255, 77, 79, 0.08);
-      }
-      .badge.pending {
-        color: #fbbf24;
-        border-color: rgba(251, 191, 36, 0.45);
-        background: rgba(251, 191, 36, 0.08);
-      }
-      button {
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        background: rgba(12, 18, 34, 0.55);
-        color: var(--text);
-        border-radius: 12px;
-        padding: 10px 14px;
-        cursor: pointer;
-        font-weight: 800;
-        transition: transform 0.12s ease, border-color 0.12s ease;
-      }
-      button:hover {
-        transform: translateY(-1px);
-        border-color: rgba(8, 119, 255, 0.45);
-      }
-      .btnRow {
-        margin-top: 18px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-      .btnPrimary {
-        background: linear-gradient(135deg, rgba(8, 119, 255, 1), rgba(59, 130, 246, 1));
-        border-color: rgba(120, 168, 255, 0.9);
-      }
-    </style>
-  </head>
-  <body>
-    <div class="topbar">
-      <div>
-        <div style="font-weight: 900;">Myco Payments</div>
-        <div class="muted" style="font-size: 12px;">Direct Payments Return</div>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MyPay Sandbox — Payment Result</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f3efe3;
+      --paper-2: #ece5d2;
+      --surface: #fffdf7;
+      --ink: #1c231f;
+      --ink-muted: #6b6a5c;
+      --rule: #d9d0b8;
+      --rule-strong: #c7bc9c;
+      --accent: #1f6f5c;
+      --accent-soft: #e1ede8;
+      --accent-ink: #0f4238;
+      --danger: #b1442f;
+      --danger-soft: #f6e6e0;
+      --ok: #1f6f5c;
+      --ok-soft: #e1ede8;
+      --pending: #9a6b1f;
+      --pending-soft: #f5ecd9;
+      --shadow-card: 0 1px 2px rgba(28, 35, 31, 0.04), 0 8px 24px rgba(28, 35, 31, 0.06);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1100px 480px at 15% -10%, rgba(31, 111, 92, 0.07), transparent 60%),
+        var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 28px 16px 64px;
+      line-height: 1.5;
+    }
+
+    .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+    .wrap { max-width: 480px; margin: 0 auto; }
+
+    .topbar {
+      max-width: 480px;
+      margin: 0 auto 22px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand { display: flex; flex-direction: column; gap: 2px; }
+
+    .brand .eyebrow {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-ink);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .brand .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .brand .sub { font-size: 12.5px; color: var(--ink-muted); }
+
+    /* ---------- Receipt card ---------- */
+
+    .receipt {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      padding: 30px 26px 24px;
+      overflow: visible;
+    }
+
+    /* Perforated tear edge along the top, like a stub torn from a ticket book */
+    .receipt::before {
+      content: "";
+      position: absolute;
+      top: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-image: repeating-linear-gradient(to right, var(--rule-strong) 0 7px, transparent 7px 14px);
+    }
+
+    .receipt::after {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+    }
+
+    /* ---------- Stamp zone: the signature element ---------- */
+
+    .stampZone {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      margin: 4px auto 18px;
+      display: grid;
+      place-items: center;
+    }
+
+    .stampRing {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px dashed var(--rule-strong);
+      transition: opacity 0.35s ease;
+    }
+
+    .stampRing .tick {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      width: 2px;
+      height: 18px;
+      margin-left: -1px;
+      border-radius: 2px;
+      background: var(--pending);
+      transform-origin: 50% 50px;
+      animation: spin 2.4s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .stamp {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 104px;
+      height: 104px;
+      border-radius: 6px;
+      border: 3px solid currentColor;
+      opacity: 0;
+      transform: scale(1.5) rotate(0deg);
+      transition: opacity 0.25s ease, transform 0.4s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .stamp::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border: 1px solid currentColor;
+      border-radius: 3px;
+      opacity: 0.55;
+    }
+
+    .stamp.show {
+      opacity: 0.92;
+      transform: scale(1) rotate(-9deg);
+    }
+
+    .stampText {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .stamp.ok { color: var(--ok); }
+    .stamp.danger { color: var(--danger); }
+
+    /* ---------- Copy ---------- */
+
+    .resultTitle {
+      margin: 0 0 6px;
+      text-align: center;
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .resultSub {
+      margin: 0 auto;
+      max-width: 34ch;
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 13.5px;
+    }
+
+    .progressTrack {
+      margin: 16px auto 0;
+      width: 100%;
+      max-width: 220px;
+      height: 3px;
+      border-radius: 3px;
+      background: var(--paper-2);
+      overflow: hidden;
+    }
+
+    .progressTrack .bar {
+      width: 40%;
+      height: 100%;
+      border-radius: 3px;
+      background: var(--pending);
+      animation: indeterminate 1.3s ease-in-out infinite;
+    }
+
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(280%); }
+    }
+
+    /* ---------- Details ---------- */
+
+    .detailsCard {
+      margin-top: 22px;
+      border-top: 1px dashed var(--rule);
+      padding-top: 4px;
+    }
+
+    .detailsRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px dashed var(--rule);
+      font-size: 13px;
+    }
+
+    .detailsRow:last-child { border-bottom: none; }
+
+    .detailsRow .k { color: var(--ink-muted); }
+    .detailsRow .v { font-weight: 600; text-align: right; }
+
+    .badge {
+      display: inline-block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge.ok { background: var(--ok-soft); color: var(--ok); }
+    .badge.danger { background: var(--danger-soft); color: var(--danger); }
+    .badge.pending { background: var(--pending-soft); color: var(--pending); }
+
+    /* ---------- Actions ---------- */
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 22px;
+    }
+
+    button {
+      border: 1px solid var(--rule-strong);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 11px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13.5px;
+      font-family: inherit;
+      transition: transform 0.1s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover { border-color: var(--rule-strong); background: var(--paper-2); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent-ink);
+      color: #fdfdf7;
+    }
+    button.primary:hover { background: var(--accent-ink); }
+
+    button.ghost { background: transparent; border-color: var(--rule); color: var(--ink-muted); }
+
+    /* ---------- Dev panel ---------- */
+
+    .devPanel {
+      margin: 18px auto 0;
+      max-width: 480px;
+    }
+
+    .devPanel summary {
+      cursor: pointer;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--ink-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-align: center;
+      list-style: none;
+    }
+
+    .devPanel summary::-webkit-details-marker { display: none; }
+    .devPanel summary:before { content: "▸ "; }
+    .devPanel[open] summary:before { content: "▾ "; }
+
+    .devPanel pre {
+      margin-top: 10px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--ink-muted);
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    footer.foot {
+      max-width: 480px;
+      margin: 26px auto 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: #a49f8c;
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="eyebrow">MyPay Sandbox</div>
+      <div class="sub">Payment result</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="receipt">
+      <div class="stampZone" id="stampZone">
+        <div class="stampRing" id="stampRing"><span class="tick"></span></div>
+        <div class="stamp" id="stamp"><span class="stampText" id="stampText"></span></div>
       </div>
+
+      <h1 class="resultTitle" id="resultTitle">Confirming your payment</h1>
+      <p class="resultSub" id="resultSub">This usually takes a few seconds — hang tight.</p>
+
+      <div class="progressTrack" id="progressTrack"><div class="bar"></div></div>
+
+      <div class="detailsCard" id="detailsCard" style="display:none;">
+        <div class="detailsRow"><span class="k">Status</span><span class="v" id="dStatus">—</span></div>
+        <div class="detailsRow"><span class="k">Transaction ID</span><span class="v mono" id="dTxId">—</span></div>
+        <div class="detailsRow"><span class="k">Amount</span><span class="v mono" id="dAmount">—</span></div>
+        <div class="detailsRow"><span class="k">Payment method</span><span class="v" id="dMethod">—</span></div>
+        <div class="detailsRow" id="dCardRow" style="display:none;"><span class="k">Card</span><span class="v mono" id="dCard">—</span></div>
+        <div class="detailsRow"><span class="k">Date</span><span class="v" id="dDate">—</span></div>
+      </div>
+
+      <div class="actions" id="resultActions"></div>
     </div>
 
-    <div class="wrap">
-      <div class="hero">
-        <h1 class="title">Payment Status</h1>
-        <div class="badge" style="border-color: rgba(8,119,255,0.45); color: #93c5fd; background: rgba(8,119,255,0.12);">Transaction Summary</div>
-      </div>
+    <details class="devPanel" id="devPanel">
+      <summary>Developer details</summary>
+      <pre id="devInfo">—</pre>
+    </details>
+  </div>
 
-      <div class="muted" style="margin-top: 8px;">Reading transaction result...</div>
+  <footer class="foot">mypay · payment-api sandbox — for internal testing only</footer>
 
-      <div id="txStatus" class="statusCard" style="margin-top: 12px;"></div>
+  <script src="./config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
+  <script>
+    if (!window.DIRECT_PAYMENTS_DEMO_CONFIG) {
+      throw new Error("DIRECT_PAYMENTS_DEMO_CONFIG is missing. Please edit config.js");
+    }
+    const CONFIG = window.DIRECT_PAYMENTS_DEMO_CONFIG;
+    const baseUrl = (CONFIG.backendBaseUrl || "").replace(/\/$/, "");
 
-      <div class="btnRow">
-        <button class="btnPrimary" onclick="window.location.href='./index.html'">Back to Demo</button>
-        <button onclick="window.location.reload()">Refresh Status</button>
-      </div>
-    </div>
+    const $ = (id) => document.getElementById(id);
 
-    <script src="./config.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.8.6/jsrsasign-all-min.js"></script>
-    <script>
-      const statusEl  = document.getElementById("txStatus");
-      const subtitleEl = document.querySelector(".muted");
+    const POLL_INTERVAL_MS = 3000;
+    const MAX_POLL_ATTEMPTS = 20; // ~60s
 
-      if (!window.DIRECT_PAYMENTS_DEMO_CONFIG) {
-        throw new Error("DIRECT_PAYMENTS_DEMO_CONFIG is missing. Please edit config.js");
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    function decodeBase64(value) {
+      try { return atob(value || ""); } catch (e) { return ""; }
+    }
+
+    function generateSignature(data, timestamp) {
+      const sgnString = `${JSON.stringify(data)}|${timestamp}`;
+      const mycoPrivateKeyPem = decodeBase64(CONFIG.mycoPrivateKeyB64);
+      if (!mycoPrivateKeyPem) throw new Error("MYCO private key is missing / not decodable");
+      const sign = new KJUR.crypto.Signature({ alg: "SHA256withRSA" });
+      sign.init(mycoPrivateKeyPem);
+      sign.updateHex(utf8tohex(sgnString));
+      return hextob64(sign.sign());
+    }
+
+    async function api(method, path, body) {
+      const xTimestamp = new Date().toISOString();
+      const xApiKey = (CONFIG.mycoApiKey || "").trim();
+      const canonicalData = body ?? {};
+      const xSignature = generateSignature(canonicalData, xTimestamp);
+
+      const res = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": xApiKey,
+          "X-Api-Signature": xSignature,
+          "X-Timestamp": xTimestamp,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      const txt = await res.text();
+      let data = null;
+      try { data = JSON.parse(txt); } catch (e) { }
+      if (!res.ok) throw new Error(data?.message || txt || `HTTP ${res.status}`);
+      return data;
+    }
+
+    // --- Resolving which transaction this return is for ---
+    //
+    // Stripe/Alfalah go through a MyPay-owned redirect hop that appends
+    // `?transactionId=<checkout.reference>` before handing off to returnUrl, so the query
+    // string is reliable for them. Paymob's hosted checkout redirects straight to returnUrl
+    // and does not echo that back - it may arrive bare, or with Paymob's own flat fields
+    // (id/success/pending/merchant_order_id/hmac...) instead. So: prefer the query string,
+    // then fall back to the reference index.html stashed in localStorage right before
+    // sending the browser to the provider's checkout page.
+    function readStoredCheckout() {
+      try {
+        const raw = localStorage.getItem("mypay:lastCheckout");
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
+    }
+
+    function resolveTransactionId() {
+      const fromQuery = getQueryParam("transactionId");
+      if (fromQuery) return { id: fromQuery, source: "returnUrl query string" };
+      const stored = readStoredCheckout();
+      if (stored?.reference) return { id: stored.reference, source: "browser (saved before redirect)" };
+      return { id: null, source: "none" };
+    }
+
+    // Paymob-native params, if it happens to send any - used only as an early visual hint
+    // while the authoritative poll against payment-api resolves.
+    function paymobRedirectHint() {
+      const success = getQueryParam("success");
+      const pending = getQueryParam("pending");
+      if (success === null && pending === null) return null;
+      if (pending === "true") return "pending";
+      return success === "true" ? "completed" : "failed";
+    }
+
+    const vendorId = (readStoredCheckout()?.vendorId) || CONFIG.demoVendorId;
+    const { id: transactionId, source: idSource } = resolveTransactionId();
+
+    const devInfo = {
+      resolvedTransactionId: transactionId,
+      resolvedFrom: idSource,
+      vendorIdUsed: vendorId,
+      rawQueryString: window.location.search || "(none)",
+      paymobRedirectHint: paymobRedirectHint(),
+      pollAttempts: 0,
+    };
+
+    function renderDevInfo() {
+      $("devInfo").textContent = JSON.stringify(devInfo, null, 2);
+    }
+    renderDevInfo();
+
+    function formatMoney(amount, currency) {
+      const n = Number(amount);
+      if (Number.isNaN(n)) return "—";
+      return `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency || ""}`.trim();
+    }
+
+    function formatCard(paymentInfo) {
+      if (!paymentInfo) return null;
+      const brand = paymentInfo.cardBrand ? String(paymentInfo.cardBrand).toUpperCase() : "";
+      let pan = paymentInfo.cardLastFour ? String(paymentInfo.cardLastFour) : "";
+      if (pan.length > 4) pan = pan.slice(-4);
+      if (!brand && !pan) return null;
+      return `${brand}${brand && pan ? " " : ""}${pan ? "•••• " + pan : ""}`.trim();
+    }
+
+    function setStamp(kind) {
+      const stamp = $("stamp");
+      const stampText = $("stampText");
+      const ring = $("stampRing");
+      stamp.classList.remove("ok", "danger", "show");
+      if (kind === "ok") {
+        stampText.textContent = "Approved";
+        stamp.classList.add("ok", "show");
+        ring.style.opacity = "0";
+      } else if (kind === "danger") {
+        stampText.textContent = "Declined";
+        stamp.classList.add("danger", "show");
+        ring.style.opacity = "0";
+      } else {
+        ring.style.opacity = "1";
       }
-      const CONFIG  = window.DIRECT_PAYMENTS_DEMO_CONFIG;
-      const baseUrl = (CONFIG.backendBaseUrl || "").replace(/\/$/, "");
+    }
 
-      function getQueryParam(name) {
-        return new URLSearchParams(window.location.search).get(name);
+    function renderActions(buttons) {
+      const el = $("resultActions");
+      el.innerHTML = "";
+      buttons.forEach((b) => {
+        const btn = document.createElement("button");
+        btn.textContent = b.label;
+        btn.className = b.primary ? "primary" : "ghost";
+        btn.addEventListener("click", b.onClick);
+        el.appendChild(btn);
+      });
+    }
+
+    function goHome() { window.location.href = "./index.html"; }
+
+    function showUnknownState() {
+      $("progressTrack").style.display = "none";
+      setStamp("pending");
+      $("stampRing").style.opacity = "0.35";
+      $("resultTitle").textContent = "We couldn't find this payment";
+      $("resultSub").textContent =
+        "This link is missing its transaction reference. If money left your account, it will still show up in your transaction history.";
+      renderActions([{ label: "Start a new payment", primary: true, onClick: goHome }]);
+      renderDevInfo();
+    }
+
+    function showResolvedState(status, t) {
+      $("progressTrack").style.display = "none";
+      $("detailsCard").style.display = "block";
+
+      const amount = formatMoney(t?.amount, t?.currency);
+      const method = t?.paymentMethod ? t.paymentMethod.charAt(0).toUpperCase() + t.paymentMethod.slice(1) : "—";
+      const card = formatCard(t?.paymentInfo);
+      const date = t?.createdAt ? new Date(t.createdAt).toLocaleString() : new Date().toLocaleString();
+
+      $("dTxId").textContent = transactionId;
+      $("dAmount").textContent = amount;
+      $("dMethod").textContent = method;
+      $("dDate").textContent = date;
+      if (card) { $("dCardRow").style.display = "flex"; $("dCard").textContent = card; }
+
+      if (status === "completed") {
+        setStamp("ok");
+        $("resultTitle").textContent = "Payment approved";
+        $("resultSub").textContent = `Your payment of ${amount} went through successfully.`;
+        $("dStatus").innerHTML = '<span class="badge ok">Approved</span>';
+        renderActions([{ label: "Make another payment", primary: true, onClick: goHome }]);
+      } else {
+        setStamp("danger");
+        $("resultTitle").textContent = "Payment declined";
+        $("resultSub").textContent = "Your card issuer declined this payment. No amount was deducted.";
+        $("dStatus").innerHTML = '<span class="badge danger">Declined</span>';
+        renderActions([
+          { label: "Try again", primary: true, onClick: goHome },
+          { label: "Back to demo", primary: false, onClick: goHome },
+        ]);
       }
+      renderDevInfo();
+    }
 
-      function decodeBase64(value) {
+    function showTimeoutState() {
+      $("progressTrack").style.display = "none";
+      $("stampRing").style.opacity = "0.6";
+      $("resultTitle").textContent = "Still confirming";
+      $("resultSub").textContent =
+        devInfo.hadNetworkError
+          ? "We're having trouble reaching the payment service. Check your connection and try again."
+          : "Your bank hasn't answered yet. You can check again in a moment, or come back later — we'll keep the result on file.";
+      $("dStatus").innerHTML = '<span class="badge pending">Pending</span>';
+      renderActions([
+        { label: "Check again", primary: true, onClick: () => { resetAndPoll(); } },
+        { label: "Back to demo", primary: false, onClick: goHome },
+      ]);
+      renderDevInfo();
+    }
+
+    function resetAndPoll() {
+      $("detailsCard").style.display = "none";
+      $("progressTrack").style.display = "block";
+      setStamp("pending");
+      $("resultTitle").textContent = "Confirming your payment";
+      $("resultSub").textContent = "This usually takes a few seconds — hang tight.";
+      renderActions([]);
+      devInfo.pollAttempts = 0;
+      devInfo.hadNetworkError = false;
+      pollForResult();
+    }
+
+    async function pollForResult() {
+      for (let attempt = 1; attempt <= MAX_POLL_ATTEMPTS; attempt++) {
+        devInfo.pollAttempts = attempt;
+        renderDevInfo();
+
         try {
-          return atob(value || "");
-        } catch (e) {
-          return "";
-        }
-      }
+          const tx = await api(
+            "GET",
+            `/transactions/${encodeURIComponent(transactionId)}?vendorId=${encodeURIComponent(vendorId)}`
+          );
+          const t = Array.isArray(tx?.data) ? tx.data[0] : tx?.data || null;
+          const status = String(t?.status || "").toLowerCase();
+          devInfo.lastResponseStatus = status || "(empty)";
 
-      function generateSignature(data, timestamp) {
-        // Backend guard expects: JSON.stringify(body) + "|" + timestamp
-        const sgnString = `${JSON.stringify(data)}|${timestamp}`;
-        const mycoPrivateKeyPem = decodeBase64(CONFIG.mycoPrivateKeyB64);
-        if (!mycoPrivateKeyPem) throw new Error("MYCO private key is missing / not decodable");
-
-        const sign = new KJUR.crypto.Signature({ alg: "SHA256withRSA" });
-        sign.init(mycoPrivateKeyPem);
-        sign.updateHex(utf8tohex(sgnString));
-        const signatureHex = sign.sign();
-        return hextob64(signatureHex);
-      }
-
-      async function api(method, path, body) {
-        const xTimestamp = new Date().toISOString();
-        const xApiKey = (CONFIG.mycoApiKey || "").trim();
-        const canonicalData = body ?? {};
-        const xSignature = generateSignature(canonicalData, xTimestamp);
-
-        const res = await fetch(`${baseUrl}${path}`, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            "X-Api-Key": xApiKey,
-            "X-Api-Signature": xSignature,
-            "X-Timestamp": xTimestamp,
-          },
-          body: body ? JSON.stringify(body) : undefined,
-        });
-
-        const txt = await res.text();
-        let data = null;
-        try { data = JSON.parse(txt); } catch (e) { }
-        if (!res.ok) throw new Error(data?.message || txt || `HTTP ${res.status}`);
-        return data;
-      }
-
-      function renderStatus(transactionId, status) {
-        const s          = (status || "pending").toLowerCase();
-        const badgeClass = s === "completed" ? "ok" : s === "failed" ? "err" : "pending";
-        statusEl.innerHTML = `
-          <div class="statusLine">
-            <span class="k">Transaction ID</span>
-            <span class="v">${transactionId}</span>
-          </div>
-          <div class="statusLine">
-            <span class="k">Status</span>
-            <span class="badge ${badgeClass}">${s}</span>
-          </div>
-        `;
-      }
-
-      async function load() {
-        const transactionId = getQueryParam("transactionId");
-
-        if (!transactionId) {
-          statusEl.innerHTML =
-            '<div class="statusLine"><span class="k">Error</span><span class="v">No transactionId found in URL.</span></div>';
-          return;
-        }
-
-        // Poll payment-api's own transaction-status endpoint directly (signed request,
-        // same as index.html's waitForFinalTransactionStatus). This does NOT depend on
-        // this demo's own /webhook relay - serverless functions are stateless across
-        // invocations, so a webhook received by one instance would be invisible to a
-        // /status request handled by a different instance. Querying payment-api's own
-        // DB directly sidesteps that entirely.
-        const maxAttempts = 15;
-
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-          subtitleEl.textContent = `Waiting for payment confirmation... (${attempt}/${maxAttempts})`;
-
-          try {
-            const tx = await api(
-              "GET",
-              `/v1/payments/transactions/${encodeURIComponent(transactionId)}?vendorId=${encodeURIComponent(CONFIG.demoVendorId)}`
-            );
-            const t = tx?.data?.[0] || (Array.isArray(tx?.data) ? tx.data[0] : null) || null;
-            const status = String(t?.status || "").toLowerCase();
-
-            if (status && status !== "pending") {
-              subtitleEl.textContent = "Payment result:";
-              renderStatus(transactionId, status);
-              return;
-            }
-          } catch (_) {
-            // network hiccup — keep polling
+          if (status === "completed" || status === "failed") {
+            showResolvedState(status, t);
+            return;
           }
-
-          if (attempt < maxAttempts) {
-            await new Promise(r => setTimeout(r, 2000));
-          }
+        } catch (err) {
+          devInfo.hadNetworkError = true;
+          devInfo.lastError = String(err?.message || err);
         }
 
-        // Timed out — show pending
-        subtitleEl.textContent = "Payment result:";
-        renderStatus(transactionId, "pending");
+        if (attempt < MAX_POLL_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+        }
       }
 
-      load();
-    </script>
-  </body>
+      showTimeoutState();
+    }
+
+    if (!transactionId) {
+      showUnknownState();
+    } else {
+      const hint = paymobRedirectHint();
+      if (hint === "failed") {
+        $("resultSub").textContent = "Confirming with payment-api...";
+      }
+      pollForResult();
+    }
+  </script>
+</body>
+
 </html>
-
