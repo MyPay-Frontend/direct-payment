@@ -639,6 +639,60 @@
           </div>
           <div class="pkgMeta">Currency: PKR · card only, one-time<br />Hosted Paymob Unified Checkout</div>
         </div>
+
+        <div class="package" data-provider="nowpayments" data-amount="1" data-currency="USD"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">NOWPayments $1</div>
+            <div class="pkgPrice">$1 USD</div>
+          </div>
+          <div class="pkgMeta">Crypto payment · one-time<br />Test minimum amount acceptance</div>
+        </div>
+
+        <div class="package" data-provider="nowpayments" data-amount="10" data-currency="USD"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">NOWPayments $10</div>
+            <div class="pkgPrice">$10 USD</div>
+          </div>
+          <div class="pkgMeta">Crypto payment · one-time<br />Standard test amount</div>
+        </div>
+
+        <div class="package" data-provider="nowpayments" data-amount="100" data-currency="USD"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">NOWPayments $100</div>
+            <div class="pkgPrice">$100 USD</div>
+          </div>
+          <div class="pkgMeta">Crypto payment · one-time<br />Higher amount test</div>
+        </div>
+
+        <div class="package" data-provider="nowpayments" data-amount="1" data-currency="AED"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">NOWPayments 1 AED</div>
+            <div class="pkgPrice">1 AED</div>
+          </div>
+          <div class="pkgMeta">Crypto payment · one-time<br />Test minimum amount acceptance</div>
+        </div>
+
+        <div class="package" data-provider="nowpayments" data-amount="10" data-currency="AED"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">NOWPayments 10 AED</div>
+            <div class="pkgPrice">10 AED</div>
+          </div>
+          <div class="pkgMeta">Crypto payment · one-time<br />Standard test amount</div>
+        </div>
+
+        <div class="package" data-provider="nowpayments" data-amount="100" data-currency="AED"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">NOWPayments 100 AED</div>
+            <div class="pkgPrice">100 AED</div>
+          </div>
+          <div class="pkgMeta">Crypto payment · one-time<br />Higher amount test</div>
+        </div>
       </div>
 
       <div class="tear"><span class="tear-label">Tear off to continue</span></div>
@@ -831,12 +885,12 @@
     // successUrl becomes checkout.redirection - the server-to-server webhook target
     // payment-api POSTs the final transaction result to. Must be a JSON-handling
     // endpoint, not a static HTML page.
-    const successUrl = `${uiBaseUrl}/api/webhook`;
+    const successUrl = 'https://webhook.site/d8d16ff4-ff7d-423e-8a2f-63c15864b8fa';
     // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
     // after completing payment on the provider's hosted page.
     // Important: backend providers append `?transactionId=...` assuming returnUrl has no query already.
     // So we must not include `?vendorId=...` here; return.html will use CONFIG.demoVendorId as fallback.
-    const returnUrl = `${uiBaseUrl}/return.html`;
+    const returnUrl = 'https://www.google.com';
 
     const $ = (id) => document.getElementById(id);
     let provider = "easypaisa";
@@ -1050,7 +1104,7 @@
         const expiresAt  = getExpiresAt(3);
 
         const onetimeAmount = Number(selectedPackageEl.getAttribute("data-amount") || "0");
-        const finalAmount = (provider === "swich-card" || provider === "stripe" || provider === "paymob") ? onetimeAmount || stuntPrice : stuntPrice;
+        const finalAmount = (provider === "swich-card" || provider === "stripe" || provider === "paymob" || provider === "nowpayments") ? onetimeAmount || stuntPrice : stuntPrice;
         const STRIPE_MIN_AMOUNT = 200;
         const stripeAmount = Math.max(
           STRIPE_MIN_AMOUNT,
@@ -1061,7 +1115,7 @@
           paymentMethod: provider,
           reference,
           amount: finalAmount,
-          amount: provider === "stripe" ? stripeAmount : (provider === "paymob" ? (onetimeAmount || stuntPrice) : stuntPrice),
+          amount: provider === "stripe" ? stripeAmount : (provider === "paymob" || provider === "nowpayments" ? (onetimeAmount || stuntPrice) : stuntPrice),
           currency,
           paymentType,
           successUrl,
@@ -1134,16 +1188,17 @@
 
         console.log("Checkout DTO:", JSON.stringify(createDto, null, 2));
 
-        // Stripe: route through /checkouts (skips /direct-payment flow entirely)
-        if (provider === "stripe") {
-          setStatus($("status"), "Creating Stripe checkout...");
-          const stripeOut = await api("POST", "/checkouts", createDto);
-          if (!stripeOut?.success) {
-            throw new Error(stripeOut?.message || stripeOut?.myPayResponseDesc || "Stripe checkout creation failed");
+        // Stripe & NOWPayments: route through /checkouts (skips /direct-payment flow entirely)
+        if (provider === "stripe" || provider === "nowpayments") {
+          const providerName = provider === "stripe" ? "Stripe" : "NOWPayments";
+          setStatus($("status"), `Creating ${providerName} checkout...`);
+          const out = await api("POST", "/checkouts", createDto);
+          if (!out?.success) {
+            throw new Error(out?.message || out?.myPayResponseDesc || `${providerName} checkout creation failed`);
           }
-          if (!stripeOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
-          setStatus($("status"), "Redirecting to Stripe checkout...");
-          window.location.href = stripeOut.checkoutUrl;
+          if (!out?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+          setStatus($("status"), `Redirecting to ${providerName} checkout...`);
+          window.location.href = out.checkoutUrl;
           return;
         }
 
