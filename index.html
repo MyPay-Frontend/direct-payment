@@ -31,6 +31,7 @@
       --rail-jazzcash: #d64937;
       --rail-stripe: #6558f5;
       --rail-paymob: #1d8a8a;
+      --rail-bongo: #c2185b;
       --shadow-card: 0 1px 2px rgba(28, 35, 31, 0.04), 0 8px 24px rgba(28, 35, 31, 0.06);
       --shadow-modal: 0 24px 70px rgba(15, 20, 17, 0.28);
       --radius: 16px;
@@ -127,6 +128,7 @@
     .rails .rail-chip.jazzcash::before { background: var(--rail-jazzcash); }
     .rails .rail-chip.stripe::before { background: var(--rail-stripe); }
     .rails .rail-chip.paymob::before { background: var(--rail-paymob); }
+    .rails .rail-chip.bongo::before { background: var(--rail-bongo); }
 
     .hero {
       margin-bottom: 26px;
@@ -248,6 +250,7 @@
     .package[data-provider="jazzcash"] { border-left-color: var(--rail-jazzcash); }
     .package[data-provider="stripe"] { border-left-color: var(--rail-stripe); }
     .package[data-provider="paymob"] { border-left-color: var(--rail-paymob); }
+    .package[data-provider="bongo"] { border-left-color: var(--rail-bongo); }
 
     .package:hover {
       transform: translateY(-1px);
@@ -549,6 +552,7 @@
       <span class="rail-chip jazzcash">JazzCash</span>
       <span class="rail-chip stripe">Stripe</span>
       <span class="rail-chip paymob">Paymob</span>
+      <span class="rail-chip bongo">Bongo</span>
     </div>
   </div>
 
@@ -638,6 +642,17 @@
             <div class="pkgPrice">Rs 100</div>
           </div>
           <div class="pkgMeta">Currency: PKR · card only, one-time<br />Hosted Paymob Unified Checkout</div>
+        </div>
+
+        <div class="package" data-provider="bongo" data-amount="10" data-currency="BDT"
+          data-payment-type="onetime"
+          data-bongo-package-id="2c3a5a09-bf2e-41db-ab70-57784384aa44"
+          tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">Bongo ৳10</div>
+            <div class="pkgPrice">৳10 BDT</div>
+          </div>
+          <div class="pkgMeta">Currency: BDT · one-time<br />Hosted Bongo checkout · fixed packageId</div>
         </div>
 
         <div class="package" data-provider="nowpayments" data-amount="1" data-currency="USD"
@@ -888,6 +903,7 @@
     // (server.js / api/webhook.js / netlify/functions/webhook.js all implement it)
     // so payment-api's post-webhook vendor callback actually reaches us and gets acked.
     const successUrl = `${uiBaseUrl}/api/webhook`;
+    // const successUrl = `https://heliolatrous-marceline-nondefined.ngrok-free.dev/api/webhook`;
 
     // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
     // after completing payment on the provider's hosted page.
@@ -1201,6 +1217,41 @@
         }
 
         console.log("Checkout DTO:", JSON.stringify(createDto, null, 2));
+
+        // Bongo: one-time only, routes through /checkouts (like Stripe/Paymob).
+        // No data-entry step — user details are fixed demo values here. Bongo
+        // forwards msisdn+email into the hosted checkout, and the package's
+        // standard_price is what actually gets charged, so `amount` is informational.
+        if (provider === "bongo") {
+          const bongoPackageId = selectedPackageEl.getAttribute("data-bongo-package-id") || undefined;
+          const bongoDto = {
+            reference,
+            amount: onetimeAmount || 10,
+            currency,
+            paymentMethod: "bongo",
+            paymentType: "onetime",
+            successUrl,
+            returnUrl,
+            user: {
+              id: CONFIG.demoUserId,
+              email: "test@example.com",
+              fullName: "John Doe",
+              phoneNumber: "+923001234567",
+            },
+            ...(bongoPackageId ? { bongoPackageId } : {}),
+          };
+
+          setStatus($("status"), "Creating Bongo checkout...");
+          const bongoOut = await api("POST", "/checkouts", bongoDto);
+          if (!bongoOut?.success) {
+            throw new Error(bongoOut?.message || bongoOut?.myPayResponseDesc || "Bongo checkout creation failed");
+          }
+          if (!bongoOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+          rememberCheckoutReference(reference, "bongo");
+          setStatus($("status"), "Redirecting to Bongo checkout...");
+          window.location.href = bongoOut.checkoutUrl;
+          return;
+        }
 
         // Stripe & NOWPayments: route through /checkouts (skips /direct-payment flow entirely)
         if (provider === "stripe" || provider === "nowpayments") {
