@@ -37,6 +37,8 @@ app.post(["/webhook", "/api/webhook"], (req, res) => {
 
   const body = req.body;
 
+  console.log("[webhook] received payload:", JSON.stringify(body));
+
   const txId = body.transactionId;
 
   const status = (body.status || body.transaction?.status || "").toLowerCase();
