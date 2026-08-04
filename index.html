@@ -1224,6 +1224,11 @@
         // standard_price is what actually gets charged, so `amount` is informational.
         if (provider === "bongo") {
           const bongoPackageId = selectedPackageEl.getAttribute("data-bongo-package-id") || undefined;
+          // Bongo lands the user back in the demo so return.html can poll + show
+          // the result. /bongo/callback redirects here without appending
+          // ?transactionId, so return.html falls back to the reference stashed
+          // in localStorage by rememberCheckoutReference() below.
+          const bongoReturnUrl = `${uiBaseUrl}/return.html`;
           const bongoDto = {
             reference,
             amount: onetimeAmount || 10,
@@ -1231,7 +1236,7 @@
             paymentMethod: "bongo",
             paymentType: "onetime",
             successUrl,
-            returnUrl,
+            returnUrl: bongoReturnUrl,
             user: {
               id: CONFIG.demoUserId,
               email: "test@example.com",
