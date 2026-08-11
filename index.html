@@ -667,6 +667,28 @@
           <div class="pkgMeta">Currency: BDT · one-time<br />EPL Yearly</div>
         </div>
 
+        <div class="package" data-provider="bongo" data-amount="1" data-currency="BDT"
+          data-payment-type="onetime"
+          data-bongo-package-id="f7c38083-06b6-4d93-87b2-7ab9f2c2bb6e"
+          tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">EPL Monthly Pass - subscription - (SVOD)</div>
+            <div class="pkgPrice">৳1 BDT</div>
+          </div>
+          <div class="pkgMeta">Currency: BDT · subscription<br />Premier League 2026/2027</div>
+        </div>
+
+        <div class="package" data-provider="bongo" data-amount="1" data-currency="BDT"
+          data-payment-type="onetime"
+          data-bongo-package-id="78d0324f-0dc0-4e9b-9b58-d501918cf88b"
+          tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">EPL Yearly Pass - subscription - (SVOD)</div>
+            <div class="pkgPrice">৳10 BDT</div>
+          </div>
+          <div class="pkgMeta">Currency: BDT · subscription<br />Premier League 2026/2027</div>
+        </div>
+
         <div class="package" data-provider="nowpayments" data-amount="1" data-currency="USD"
           data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
@@ -874,6 +896,35 @@
 
         <div class="status" id="statusPaymob"></div>
       </div>
+
+      <!-- Bongo customer details — forwarded into Bongo's hosted checkout -->
+      <div class="card hide" id="bongoBillingCard" style="padding:0; border:none; box-shadow:none;">
+        <div class="section-label"><span class="num">02</span>Your details for Bongo</div>
+        <div class="row">
+          <div>
+            <label>Email <span class="req">*</span></label>
+            <input id="bongoEmail" placeholder="customer@example.com" />
+          </div>
+          <div>
+            <label>Phone number <span class="req">*</span></label>
+            <input id="bongoPhone" placeholder="+923001234567" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Full name <span class="req">*</span></label>
+            <input id="bongoFullName" placeholder="John Doe" />
+          </div>
+          <div></div>
+        </div>
+
+        <div class="actions">
+          <button id="btnSubmitBongoBilling" class="primary">Continue to Bongo</button>
+          <button id="btnBackToStartFromBongo" class="ghost">Back</button>
+        </div>
+
+        <div class="status" id="statusBongo"></div>
+      </div>
     </div>
   </div>
 
@@ -933,6 +984,9 @@
     // Holds the checkout DTO built by btnContinue for the Paymob flow, minus the
     // billing-specific user fields - the billing form fills those in before submit.
     let pendingPaymobDto = null;
+    // Same idea for Bongo - the DTO waits here until the customer fills in
+    // email / full name / phone number.
+    let pendingBongoDto = null;
 
     function openFlowModal() {
       $("flowOverlay").style.display = "grid";
@@ -950,18 +1004,28 @@
       $("step2Card").classList.remove("hide");
       $("otpCard").classList.add("hide");
       $("paymobBillingCard").classList.add("hide");
+      $("bongoBillingCard").classList.add("hide");
     }
 
     function showOtpStep() {
       $("otpCard").classList.remove("hide");
       $("step2Card").classList.add("hide");
       $("paymobBillingCard").classList.add("hide");
+      $("bongoBillingCard").classList.add("hide");
     }
 
     function showPaymobBillingStep() {
       $("paymobBillingCard").classList.remove("hide");
       $("step2Card").classList.add("hide");
       $("otpCard").classList.add("hide");
+      $("bongoBillingCard").classList.add("hide");
+    }
+
+    function showBongoBillingStep() {
+      $("bongoBillingCard").classList.remove("hide");
+      $("step2Card").classList.add("hide");
+      $("otpCard").classList.add("hide");
+      $("paymobBillingCard").classList.add("hide");
     }
 
     function setStatus(el, text) {
@@ -1231,39 +1295,29 @@
         console.log("Checkout DTO:", JSON.stringify(createDto, null, 2));
 
         // Bongo: one-time only, routes through /checkouts (like Stripe/Paymob).
-        // No data-entry step — user details are fixed demo values here. Bongo
-        // forwards msisdn+email into the hosted checkout, and the package's
-        // standard_price is what actually gets charged, so `amount` is informational.
+        // Skips the /direct-payment flow, but still needs customer details
+        // (email, full name, phone) — Bongo forwards msisdn+email into the
+        // hosted checkout — so we collect them in a dedicated step first, the
+        // same way Paymob does. The package's standard_price is what actually
+        // gets charged, so `amount` is informational.
         if (provider === "bongo") {
           const bongoPackageId = selectedPackageEl.getAttribute("data-bongo-package-id") || undefined;
           // Bongo lands the user back in the demo so return.html can poll + show
           // the result. /bongo/callback redirects here without appending
           // ?transactionId, so return.html falls back to the reference stashed
-          // in localStorage by rememberCheckoutReference() below.
+          // in localStorage by rememberCheckoutReference() at submit time.
           const bongoReturnUrl = `${uiBaseUrl}/return.html`;
-          const bongoDto = {
+          pendingBongoDto = {
             reference,
             paymentMethod: "bongo",
             successUrl,
             returnUrl: 'https://webhook.site/19e21972-9cbc-4fe8-b987-1ce8fc2c4a4d',
-            user: {
-              id: CONFIG.demoUserId,
-              email: "test@example.com",
-              fullName: "John Doe",
-              phoneNumber: "+923001234567",
-            },
             ...(bongoPackageId ? { bongoPackageId } : {}),
           };
 
-          setStatus($("status"), "Creating Bongo checkout...");
-          const bongoOut = await api("POST", "/checkouts", bongoDto);
-          if (!bongoOut?.success) {
-            throw new Error(bongoOut?.message || bongoOut?.myPayResponseDesc || "Bongo checkout creation failed");
-          }
-          if (!bongoOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
-          rememberCheckoutReference(reference, "bongo");
-          setStatus($("status"), "Redirecting to Bongo checkout...");
-          window.location.href = bongoOut.checkoutUrl;
+          setStatus($("status"), "");
+          showBongoBillingStep();
+          openFlowModal();
           return;
         }
 
@@ -1391,6 +1445,48 @@
         window.location.href = paymobOut.checkoutUrl;
       } catch (e) {
         setStatus($("statusPaymob"), `Error: ${String(e.message || e)}`);
+      }
+    });
+
+    $("btnBackToStartFromBongo").addEventListener("click", () => {
+      closeFlowModal();
+      pendingBongoDto = null;
+      setStatus($("statusBongo"), "");
+    });
+
+    $("btnSubmitBongoBilling").addEventListener("click", async () => {
+      try {
+        if (!pendingBongoDto) throw new Error("No pending Bongo checkout - please go back and select the package again.");
+
+        const email = $("bongoEmail").value.trim();
+        const phoneNumber = $("bongoPhone").value.trim();
+        const fullName = $("bongoFullName").value.trim();
+
+        if (!email) throw new Error("Email is required for Bongo");
+        if (!phoneNumber) throw new Error("Phone number is required for Bongo");
+        if (!fullName) throw new Error("Full name is required for Bongo");
+
+        const bongoDto = {
+          ...pendingBongoDto,
+          user: {
+            id: CONFIG.demoUserId,
+            email,
+            fullName,
+            phoneNumber,
+          },
+        };
+
+        setStatus($("statusBongo"), "Creating Bongo checkout...");
+        const bongoOut = await api("POST", "/checkouts", bongoDto);
+        if (!bongoOut?.success) {
+          throw new Error(bongoOut?.message || bongoOut?.myPayResponseDesc || "Bongo checkout creation failed");
+        }
+        if (!bongoOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+        rememberCheckoutReference(bongoDto.reference, "bongo");
+        setStatus($("statusBongo"), "Redirecting to Bongo checkout...");
+        window.location.href = bongoOut.checkoutUrl;
+      } catch (e) {
+        setStatus($("statusBongo"), `Error: ${String(e.message || e)}`);
       }
     });
 
