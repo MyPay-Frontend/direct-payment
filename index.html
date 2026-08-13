@@ -627,6 +627,15 @@
           <div class="pkgMeta">Stunt + terminal retries: 25/50/75/100/125h (sandbox: 10 min each)</div>
         </div>
 
+        <div class="package" data-provider="ep_onetime" data-amount="10" data-currency="PKR"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">EasyPaisa one-time (MA)</div>
+            <div class="pkgPrice">Rs 10</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR · one-time push-to-app debit<br />No wallet linking, no OTP screen — approve in your own EasyPaisa app</div>
+        </div>
+
         <div class="package" data-provider="stripe" data-amount="200" data-currency="PKR"
           data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
@@ -1175,6 +1184,21 @@
       return "pending";
     }
 
+    // EasyPaisa one-time (MA) — reuses the existing /direct-payment/deduct-amount
+    // endpoint. paymentMethod: "ep_onetime" is what tells payment-api's EasyPaisa
+    // provider to take the one-time MA branch instead of the wallet-linked pinless
+    // one — no walletId needed for this paymentMethod, just mobileAccountNo. The
+    // call is synchronous (EasyPaisa's own response code is authoritative), so the
+    // result is already final by the time it returns — no polling needed.
+    async function easypaisaOnetimeDeduct(checkoutId, mobileAccountNo, email) {
+      return api("POST", "/direct-payment/deduct-amount", {
+        paymentMethod: "ep_onetime",
+        checkoutId,
+        mobileAccountNo,
+        email,
+      });
+    }
+
     function setOtpTitle() {
       if (provider === "jazzcash") $("otpTitle").innerHTML = '<span class="num">03</span>Enter OTP (JazzCash)';
       else if (provider === "swich-card") $("otpTitle").innerHTML = '<span class="num">03</span>Enter OTP (Swich Card)';
@@ -1353,6 +1377,24 @@
           return;
         }
 
+        // EasyPaisa one-time (MA): checkout creation is identical to the wallet-linking
+        // package - same /direct-payment/session call. paymentMethod is sent as
+        // "ep_onetime" directly (createDto.paymentMethod already equals provider),
+        // which payment-api's CheckoutsService stores as-is on the checkout row.
+        // Only what happens after step 2 (submit phone) differs.
+        if (provider === "ep_onetime") {
+          setStatus($("status"), "Creating EasyPaisa checkout...");
+          const onetimeOut = await api("POST", "/direct-payment/session", createDto);
+          if (!onetimeOut?.success) throw new Error(onetimeOut?.message || "Session creation failed");
+          if (!onetimeOut?.checkoutId) throw new Error("checkoutId is missing");
+          sessionId = onetimeOut.checkoutId;
+          rememberCheckoutReference(reference, "ep_onetime");
+          setStatus($("status"), `Session created. checkoutId: ${sessionId}`);
+          showStep2();
+          openFlowModal();
+          return;
+        }
+
         setStatus($("status"), "Creating checkout session...");
         const out = await api("POST", "/direct-payment/session", createDto);
         if (!out?.success) throw new Error("Session creation failed");
@@ -1498,7 +1540,27 @@
         lastEmail = $("email").value.trim();
 
         if (!lastPhone) throw new Error("phoneNumber is required");
-        if (!lastEmail && provider === "easypaisa") throw new Error("Email is required for EasyPaisa");
+        if (!lastEmail && (provider === "easypaisa" || provider === "ep_onetime")) throw new Error("Email is required for EasyPaisa");
+
+        // EasyPaisa one-time (MA): no OTP screen at all - deduct-amount (with
+        // paymentMethod: "ep_onetime") is synchronous, so the result is already
+        // final by the time it returns. Shown right here in the modal, same as
+        // the existing wallet-linked "payment-required" branch below.
+        if (provider === "ep_onetime") {
+          if (!sessionId) throw new Error("sessionId is missing");
+
+          setStatus($("status2"), "Sending payment request to EasyPaisa...");
+          const payOut = await easypaisaOnetimeDeduct(sessionId, lastPhone, lastEmail);
+
+          if (payOut?.status === "completed") {
+            showModal("ok", "Payment completed", payOut?.statusMessage || "Your EasyPaisa MA payment was approved and completed successfully.");
+          } else if (payOut?.status === "failed") {
+            showModal("err", "Payment failed", payOut?.statusMessage || "The transaction was rejected, expired, or could not be completed. You can try again with a different number.", null, true);
+          } else {
+            showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
+          }
+          return;
+        }
 
         // Swich Card: create session here with full user object
         if (provider === "swich-card") {
