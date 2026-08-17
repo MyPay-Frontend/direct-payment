@@ -636,6 +636,15 @@
           <div class="pkgMeta">Currency: PKR · one-time push-to-app debit<br />No wallet linking, no OTP screen — approve in your own EasyPaisa app</div>
         </div>
 
+        <div class="package" data-provider="jc_onetime" data-amount="10" data-currency="PKR"
+          data-payment-type="onetime" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">JazzCash one-time (CNIC)</div>
+            <div class="pkgPrice">Rs 10</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR · one-time CNIC-based debit<br />No wallet linking, no OTP screen — needs mobile number + last 6 digits of CNIC</div>
+        </div>
+
         <div class="package" data-provider="stripe" data-amount="200" data-currency="PKR"
           data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
@@ -788,6 +797,13 @@
           <div>
             <label>Full name <span class="req">*</span></label>
             <input id="fullName" placeholder="Ali Khan" />
+          </div>
+        </div>
+
+        <div class="row hide" id="jazzcashOnetimeExtraFields">
+          <div>
+            <label>CNIC last 6 digits <span class="req">*</span></label>
+            <input id="cnicLastSix" placeholder="123456" maxlength="6" inputmode="numeric" />
           </div>
         </div>
 
@@ -1004,6 +1020,11 @@
       } else {
         $("swichExtraFields").classList.add("hide");
       }
+      if (provider === "jc_onetime") {
+        $("jazzcashOnetimeExtraFields").classList.remove("hide");
+      } else {
+        $("jazzcashOnetimeExtraFields").classList.add("hide");
+      }
     }
     function closeFlowModal() {
       $("flowOverlay").style.display = "none";
@@ -1196,6 +1217,20 @@
         checkoutId,
         mobileAccountNo,
         email,
+      });
+    }
+
+    // JazzCash one-time (CNIC) — same /direct-payment/deduct-amount endpoint.
+    // paymentMethod: "jc_onetime" tells payment-api's JazzCash provider to take
+    // the CNIC-based one-time branch instead of the token-linked one — no
+    // walletId, no email; just mobileAccountNo + cnicLastSix. Synchronous, same
+    // as the EasyPaisa one-time call — the result is final by the time it returns.
+    async function jazzcashOnetimeDeduct(checkoutId, mobileAccountNo, cnicLastSix) {
+      return api("POST", "/direct-payment/deduct-amount", {
+        paymentMethod: "jc_onetime",
+        checkoutId,
+        mobileAccountNo,
+        cnicLastSix,
       });
     }
 
@@ -1395,6 +1430,22 @@
           return;
         }
 
+        // JazzCash one-time (CNIC): same /direct-payment/session call as every other
+        // rail here - paymentMethod "jc_onetime" is stored as-is on the checkout row.
+        // Step 2 collects mobile number + CNIC last 6 digits instead of an OTP.
+        if (provider === "jc_onetime") {
+          setStatus($("status"), "Creating JazzCash checkout...");
+          const onetimeOut = await api("POST", "/direct-payment/session", createDto);
+          if (!onetimeOut?.success) throw new Error(onetimeOut?.message || "Session creation failed");
+          if (!onetimeOut?.checkoutId) throw new Error("checkoutId is missing");
+          sessionId = onetimeOut.checkoutId;
+          rememberCheckoutReference(reference, "jc_onetime");
+          setStatus($("status"), `Session created. checkoutId: ${sessionId}`);
+          showStep2();
+          openFlowModal();
+          return;
+        }
+
         setStatus($("status"), "Creating checkout session...");
         const out = await api("POST", "/direct-payment/session", createDto);
         if (!out?.success) throw new Error("Session creation failed");
@@ -1556,6 +1607,29 @@
             showModal("ok", "Payment completed", payOut?.statusMessage || "Your EasyPaisa MA payment was approved and completed successfully.");
           } else if (payOut?.status === "failed") {
             showModal("err", "Payment failed", payOut?.statusMessage || "The transaction was rejected, expired, or could not be completed. You can try again with a different number.", null, true);
+          } else {
+            showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
+          }
+          return;
+        }
+
+        // JazzCash one-time (CNIC): no OTP screen either - deduct-amount (with
+        // paymentMethod: "jc_onetime") is synchronous, resolved by JazzCash's own
+        // pp_ResponseCode. Shown right here in the modal, no redirect.
+        if (provider === "jc_onetime") {
+          if (!sessionId) throw new Error("sessionId is missing");
+
+          const cnicLastSix = $("cnicLastSix").value.trim();
+          if (!cnicLastSix) throw new Error("CNIC last 6 digits are required for JazzCash one-time");
+          if (!/^\d{6}$/.test(cnicLastSix)) throw new Error("CNIC last 6 digits must be exactly 6 digits");
+
+          setStatus($("status2"), "Sending payment request to JazzCash...");
+          const payOut = await jazzcashOnetimeDeduct(sessionId, lastPhone, cnicLastSix);
+
+          if (payOut?.status === "completed") {
+            showModal("ok", "Payment completed", payOut?.statusMessage || "Your JazzCash one-time payment was completed successfully.");
+          } else if (payOut?.status === "failed") {
+            showModal("err", "Payment failed", payOut?.statusMessage || "The transaction was rejected or could not be completed. You can try again with a different number.", null, true);
           } else {
             showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
           }
