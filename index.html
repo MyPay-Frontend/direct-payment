@@ -131,6 +131,44 @@
     .rails .rail-chip.paymob::before { background: var(--rail-paymob); }
     .rails .rail-chip.bongo::before { background: var(--rail-bongo); }
 
+    .modeToggle {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .modeBtn {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--ink-muted);
+      cursor: pointer;
+    }
+
+    .modeBtn.active {
+      background: var(--surface);
+      color: var(--accent-ink);
+      box-shadow: var(--shadow-card);
+    }
+
+    .modeNote {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      margin: 0 0 22px;
+      max-width: 54ch;
+    }
+
+    .package.hostedHidden { display: none; }
+
     .hero {
       margin-bottom: 26px;
     }
@@ -558,6 +596,15 @@
   </div>
 
   <div class="wrap">
+    <div class="modeToggle" role="tablist" aria-label="Flow mode">
+      <button type="button" class="modeBtn active" id="modeBtnDirect" data-mode="direct" role="tab" aria-selected="true">Direct API</button>
+      <button type="button" class="modeBtn" id="modeBtnHosted" data-mode="hosted" role="tab" aria-selected="false">Hosted Checkout</button>
+    </div>
+    <p class="modeNote" id="modeNote">
+      <strong>Direct API</strong> drives payment-api's <span class="mono">/direct-payment</span> endpoints from this page.
+      <strong>Hosted Checkout</strong> creates the checkout and redirects your browser to payment-api's own JazzCash / EasyPaisa page — phone entry, OTP, wallet linking and saved-account reuse all happen there, same as a real vendor integration. Only EasyPaisa and JazzCash support this mode.
+    </p>
+
     <div class="hero">
       <h1>Test a payment rail end to end</h1>
       <p>Pick a rail below, fill in what it needs, and walk the real checkout path — hosted redirect, OTP, or billing details — through to a final status.</p>
@@ -583,6 +630,7 @@
           data-stunt-freq="1"
           data-terminal-price="5"
           data-terminal-freq="30"
+          data-hosted-eligible="true"
           tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">EasyPaisa</div>
@@ -609,6 +657,7 @@
           data-stunt-freq="1"
           data-terminal-price="5"
           data-terminal-freq="30"
+          data-hosted-eligible="true"
           tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">JazzCash</div>
@@ -1001,6 +1050,7 @@
 
     const $ = (id) => document.getElementById(id);
     let provider = "easypaisa";
+    let flowMode = "direct"; // "direct" | "hosted"
     let selectedPackageEl = document.querySelector(".package.active");
     let sessionId = "";
     let walletId = "";
@@ -1106,6 +1156,45 @@
       el.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.click(); }
       });
+    });
+
+    // Hosted Checkout only exists for EasyPaisa/JazzCash (the jazzcash.hbs /
+    // easypaisa.hbs pages this demo redirects into) - every other rail's package
+    // card is hidden while that mode is active, and selection falls back to the
+    // first eligible one so a stale non-eligible selection can't be submitted.
+    function applyFlowMode() {
+      const allPackages = document.querySelectorAll(".package");
+      allPackages.forEach((el) => {
+        const eligible = el.getAttribute("data-hosted-eligible") === "true";
+        el.classList.toggle("hostedHidden", flowMode === "hosted" && !eligible);
+      });
+      if (flowMode === "hosted" && (!selectedPackageEl || selectedPackageEl.getAttribute("data-hosted-eligible") !== "true")) {
+        const firstEligible = document.querySelector('.package[data-hosted-eligible="true"]');
+        if (firstEligible) {
+          allPackages.forEach((x) => x.classList.remove("active"));
+          firstEligible.classList.add("active");
+          selectedPackageEl = firstEligible;
+          provider = firstEligible.getAttribute("data-provider");
+        }
+      }
+    }
+
+    $("modeBtnDirect").addEventListener("click", () => {
+      flowMode = "direct";
+      $("modeBtnDirect").classList.add("active");
+      $("modeBtnHosted").classList.remove("active");
+      $("modeBtnDirect").setAttribute("aria-selected", "true");
+      $("modeBtnHosted").setAttribute("aria-selected", "false");
+      applyFlowMode();
+    });
+
+    $("modeBtnHosted").addEventListener("click", () => {
+      flowMode = "hosted";
+      $("modeBtnHosted").classList.add("active");
+      $("modeBtnDirect").classList.remove("active");
+      $("modeBtnHosted").setAttribute("aria-selected", "true");
+      $("modeBtnDirect").setAttribute("aria-selected", "false");
+      applyFlowMode();
     });
 
     $("paymobAddressToggle").addEventListener("click", () => {
@@ -1352,6 +1441,29 @@
         }
 
         console.log("Checkout DTO:", JSON.stringify(createDto, null, 2));
+
+        // Hosted Checkout mode - create the checkout via the same /checkouts
+        // endpoint the real vendor integration uses, then redirect straight into
+        // payment-api's own JazzCash/EasyPaisa hosted page (jazzcash.hbs /
+        // easypaisa.hbs, or the saved-account picker if this demoUserId already
+        // has a linked wallet for this vendor). Everything from here on - phone
+        // entry, OTP, wallet linking, saved-account reuse, final redirect to
+        // returnUrl - happens on that real hosted page, not in this demo.
+        if (flowMode === "hosted") {
+          if (provider !== "easypaisa" && provider !== "jazzcash") {
+            throw new Error("Hosted checkout is only available for EasyPaisa and JazzCash in this demo.");
+          }
+          setStatus($("status"), `Creating ${provider} checkout (hosted)...`);
+          const hostedOut = await api("POST", "/checkouts", createDto);
+          if (!hostedOut?.success) {
+            throw new Error(hostedOut?.message || hostedOut?.myPayResponseDesc || "Hosted checkout creation failed");
+          }
+          if (!hostedOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+          rememberCheckoutReference(reference, provider);
+          setStatus($("status"), "Redirecting to hosted checkout...");
+          window.location.href = hostedOut.checkoutUrl;
+          return;
+        }
 
         // Bongo: one-time only, routes through /checkouts (like Stripe/Paymob).
         // Skips the /direct-payment flow, but still needs customer details
