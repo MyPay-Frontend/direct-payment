@@ -676,11 +676,11 @@
           <div class="pkgMeta">Stunt + terminal retries: 25/50/75/100/125h (sandbox: 10 min each)</div>
         </div>
 
-        <div class="package" data-provider="ep_onetime" data-amount="10" data-currency="PKR"
+        <div class="package" data-provider="ep_onetime" data-amount="1" data-currency="PKR"
           data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">EasyPaisa one-time (MA)</div>
-            <div class="pkgPrice">Rs 10</div>
+            <div class="pkgPrice">Rs 1</div>
           </div>
           <div class="pkgMeta">Currency: PKR · one-time push-to-app debit<br />No wallet linking, no OTP screen — approve in your own EasyPaisa app</div>
         </div>
@@ -714,7 +714,7 @@
 
         <div class="package" data-provider="bongo" data-amount="1" data-currency="BDT"
           data-payment-type="onetime"
-          data-bongo-package-id="65568d4c-a0bc-4253-94e6-aed2dcaf48a7"
+          data-bongo-package-id="ca9dda3e-9158-40af-bb03-3ea1190f3f27"
           tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">EPL Monthly Pass - Pay-Per-View (TVOD)</div>
@@ -725,7 +725,7 @@
 
         <div class="package" data-provider="bongo" data-amount="1" data-currency="BDT"
           data-payment-type="onetime"
-          data-bongo-package-id="fa535faa-7e75-4c11-8a60-99ac837916c8"
+          data-bongo-package-id="ca9dda3e-9158-40af-bb03-3ea1190f3f27"
           tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">EPL Yearly Pass - Pay-Per-View (TVOD)</div>
@@ -1039,8 +1039,8 @@
     // endpoint, not a static HTML page. Points at this demo's own webhook receiver
     // (server.js / api/webhook.js / netlify/functions/webhook.js all implement it)
     // so payment-api's post-webhook vendor callback actually reaches us and gets acked.
-    const successUrl = `${uiBaseUrl}/api/webhook`;
-    // const successUrl = `https://heliolatrous-marceline-nondefined.ngrok-free.dev/api/webhook`;
+    // const successUrl = `${uiBaseUrl}/api/webhook`;
+    const successUrl = `https://webhook.site/90c0aad5-f415-468a-b7b3-0fff7d6868da`;
 
     // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
     // after completing payment on the provider's hosted page.
