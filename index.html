@@ -1500,10 +1500,10 @@
           if (!out?.success) {
             throw new Error(out?.message || out?.myPayResponseDesc || `${providerName} checkout creation failed`);
           }
-          if (!stripeOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
-          rememberCheckoutReference(reference, "stripe");
-          setStatus($("status"), "Redirecting to Stripe checkout...");
-          window.location.href = stripeOut.checkoutUrl;
+          if (!out?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+          rememberCheckoutReference(reference, provider);
+          setStatus($("status"), `Redirecting to ${providerName} checkout...`);
+          window.location.href = out.checkoutUrl;
           return;
         }
 
