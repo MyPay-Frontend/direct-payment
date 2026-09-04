@@ -251,6 +251,17 @@
     .badge-terminal { background: #e6ecf7; color: #38538f; }
     .badge-recurring { background: var(--pending-soft); color: var(--pending); }
 
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid var(--pending-soft);
+      border-top-color: var(--pending);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .cycleRow {
       display: flex;
       justify-content: space-between;
@@ -1004,7 +1015,10 @@
 
   <div class="modalOverlay" id="modalOverlay">
     <div class="modal">
-      <h3 id="modalTitle" style="margin: 0 0 8px;">Result</h3>
+      <h3 id="modalTitle" style="margin: 0 0 8px; display: flex; align-items: center; gap: 10px;">
+        <span id="modalSpinner" class="spinner" style="display:none;"></span>
+        <span id="modalTitleText">Result</span>
+      </h3>
       <div class="txt" id="modalTxt"></div>
       <div class="actions" style="justify-content: flex-end; gap: 10px;">
         <button id="modalRetryBtn" class="ghost" style="display:none;">Try different number</button>
@@ -1056,6 +1070,10 @@
     let walletId = "";
     let lastPhone = "";
     let lastEmail = "";
+    // The checkout's own `reference` (not checkoutId) - needed to poll
+    // GET /transactions/:id after ep_onetime/jc_onetime's deduct-amount now
+    // returns immediately with a "pending" result instead of waiting for it.
+    let lastReference = "";
     // Holds the checkout DTO built by btnContinue for the Paymob flow, minus the
     // billing-specific user fields - the billing form fills those in before submit.
     let pendingPaymobDto = null;
@@ -1115,16 +1133,29 @@
 
     function showModal(kind, title, text, onOk, canRetry = false) {
       const overlay = $("modalOverlay");
-      $("modalTitle").textContent = title;
+      $("modalTitleText").textContent = title;
       $("modalTxt").textContent = text || "";
       if (kind === "ok") $("modalTxt").style.color = "var(--ok)";
       else if (kind === "err") $("modalTxt").style.color = "var(--danger)";
+      else if (kind === "pending" || kind === "timeout") $("modalTxt").style.color = "var(--pending)";
       else $("modalTxt").style.color = "var(--ink-muted)";
       overlay.style.display = "grid";
 
       const retryBtn = $("modalRetryBtn");
       const okBtn = $("modalOkBtn");
+      const spinner = $("modalSpinner");
 
+      spinner.style.display = kind === "pending" ? "inline-block" : "none";
+
+      if (kind === "pending") {
+        // Still waiting on the final completed/failed result from the polling loop -
+        // nothing to close or retry until that resolves.
+        retryBtn.style.display = "none";
+        okBtn.style.display = "none";
+        return;
+      }
+
+      okBtn.style.display = "";
       if (canRetry) {
         retryBtn.style.display = "";
         okBtn.textContent = "Close";
@@ -1276,30 +1307,14 @@
       return data;
     }
 
-    async function waitForFinalTransactionStatus(transactionId, statusEl) {
-      const maxAttempts = 10; // ~30 seconds with 3s interval
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        if (statusEl) setStatus(statusEl, `Checking transaction status... (${attempt}/${maxAttempts})`);
-
-        const tx = await api(
-          "GET",
-          `/v1/payments/transactions/${encodeURIComponent(transactionId)}?vendorId=${encodeURIComponent(CONFIG.demoVendorId)}`
-        );
-        const t = tx?.data?.[0] || (Array.isArray(tx?.data) ? tx.data[0] : null) || null;
-        const status = String(t?.status || "").toLowerCase();
-
-        if (status && status !== "pending") return status;
-        if (attempt < maxAttempts) await new Promise((resolve) => setTimeout(resolve, 3000));
-      }
-      return "pending";
-    }
-
     // EasyPaisa one-time (MA) — reuses the existing /direct-payment/deduct-amount
     // endpoint. paymentMethod: "ep_onetime" is what tells payment-api's EasyPaisa
     // provider to take the one-time MA branch instead of the wallet-linked pinless
-    // one — no walletId needed for this paymentMethod, just mobileAccountNo. The
-    // call is synchronous (EasyPaisa's own response code is authoritative), so the
-    // result is already final by the time it returns — no polling needed.
+    // one — no walletId needed for this paymentMethod, just mobileAccountNo.
+    // As of the backend's async rework, this call returns immediately with
+    // status: "pending" (the actual EasyPaisa approval-wait happens server-side
+    // in the background) — see pollOnetimeTransactionResult() below for how the
+    // final completed/failed result is obtained.
     async function easypaisaOnetimeDeduct(checkoutId, mobileAccountNo, email) {
       return api("POST", "/direct-payment/deduct-amount", {
         paymentMethod: "ep_onetime",
@@ -1312,8 +1327,8 @@
     // JazzCash one-time (CNIC) — same /direct-payment/deduct-amount endpoint.
     // paymentMethod: "jc_onetime" tells payment-api's JazzCash provider to take
     // the CNIC-based one-time branch instead of the token-linked one — no
-    // walletId, no email; just mobileAccountNo + cnicLastSix. Synchronous, same
-    // as the EasyPaisa one-time call — the result is final by the time it returns.
+    // walletId, no email; just mobileAccountNo + cnicLastSix. Also returns
+    // immediately with status: "pending" now — see pollOnetimeTransactionResult().
     async function jazzcashOnetimeDeduct(checkoutId, mobileAccountNo, cnicLastSix) {
       return api("POST", "/direct-payment/deduct-amount", {
         paymentMethod: "jc_onetime",
@@ -1321,6 +1336,49 @@
         mobileAccountNo,
         cnicLastSix,
       });
+    }
+
+    // Both ep_onetime and jc_onetime now hand the actual EasyPaisa/JazzCash
+    // approval-wait off to a background job on the server and answer
+    // deduct-amount immediately with status: "pending". The vendor's real
+    // integration would rely on the webhook payment-api sends once that
+    // background job resolves - this demo page has no webhook receiver of its
+    // own, so it polls GET /transactions/:reference (API-key only, no
+    // signature) every few seconds until the Transaction row flips to
+    // completed/failed, and updates the modal accordingly.
+    const ONETIME_POLL_INTERVAL_MS = 3000;
+    const ONETIME_POLL_MAX_ATTEMPTS = 40; // ~2 minutes - comfortably past the backend's 90s EasyPaisa/JazzCash timeout
+
+    async function pollOnetimeTransactionResult(reference, providerLabel) {
+      for (let attempt = 1; attempt <= ONETIME_POLL_MAX_ATTEMPTS; attempt++) {
+        try {
+          const tx = await api("GET", `/transactions/${encodeURIComponent(reference)}`);
+          const t = Array.isArray(tx?.data) ? tx.data[0] : tx?.data || null;
+          const status = String(t?.status || "").toLowerCase();
+
+          if (status === "completed") {
+            showModal("ok", "Payment completed", `Your ${providerLabel} payment was approved and completed successfully.`);
+            return;
+          }
+          if (status === "failed") {
+            showModal("err", "Payment failed", "The transaction was rejected, expired, or could not be completed. You can try again with a different number.", null, true);
+            return;
+          }
+        } catch (e) {
+          // Transient network/API error while polling - keep trying rather than
+          // giving up on a single failed request.
+        }
+        if (attempt < ONETIME_POLL_MAX_ATTEMPTS) {
+          await new Promise((resolve) => setTimeout(resolve, ONETIME_POLL_INTERVAL_MS));
+        }
+      }
+      showModal(
+        "timeout",
+        "Still processing",
+        "We haven't received a final result yet. The payment may still complete shortly - check your transaction history, or try again in a moment.",
+        null,
+        false,
+      );
     }
 
     function setOtpTitle() {
@@ -1535,6 +1593,7 @@
           if (!onetimeOut?.success) throw new Error(onetimeOut?.message || "Session creation failed");
           if (!onetimeOut?.checkoutId) throw new Error("checkoutId is missing");
           sessionId = onetimeOut.checkoutId;
+          lastReference = reference;
           rememberCheckoutReference(reference, "ep_onetime");
           setStatus($("status"), `Session created. checkoutId: ${sessionId}`);
           showStep2();
@@ -1551,6 +1610,7 @@
           if (!onetimeOut?.success) throw new Error(onetimeOut?.message || "Session creation failed");
           if (!onetimeOut?.checkoutId) throw new Error("checkoutId is missing");
           sessionId = onetimeOut.checkoutId;
+          lastReference = reference;
           rememberCheckoutReference(reference, "jc_onetime");
           setStatus($("status"), `Session created. checkoutId: ${sessionId}`);
           showStep2();
@@ -1583,6 +1643,7 @@
       walletId = "";
       lastPhone = "";
       lastEmail = "";
+      lastReference = "";
       setStatus($("status2"), "");
       setStatus($("statusOtp"), "");
     });
@@ -1706,11 +1767,13 @@
         if (!lastEmail && (provider === "easypaisa" || provider === "ep_onetime")) throw new Error("Email is required for EasyPaisa");
 
         // EasyPaisa one-time (MA): no OTP screen at all - deduct-amount (with
-        // paymentMethod: "ep_onetime") is synchronous, so the result is already
-        // final by the time it returns. Shown right here in the modal, same as
-        // the existing wallet-linked "payment-required" branch below.
+        // paymentMethod: "ep_onetime") now returns immediately with
+        // status: "pending" while EasyPaisa's approval-wait runs server-side in
+        // the background. Show that message right away with a loader, then poll
+        // for the real completed/failed result.
         if (provider === "ep_onetime") {
           if (!sessionId) throw new Error("sessionId is missing");
+          if (!lastReference) throw new Error("reference is missing");
 
           setStatus($("status2"), "Sending payment request to EasyPaisa...");
           const payOut = await easypaisaOnetimeDeduct(sessionId, lastPhone, lastEmail);
@@ -1719,6 +1782,9 @@
             showModal("ok", "Payment completed", payOut?.statusMessage || "Your EasyPaisa MA payment was approved and completed successfully.");
           } else if (payOut?.status === "failed") {
             showModal("err", "Payment failed", payOut?.statusMessage || "The transaction was rejected, expired, or could not be completed. You can try again with a different number.", null, true);
+          } else if (payOut?.status === "pending" && payOut?.success) {
+            showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
+            pollOnetimeTransactionResult(lastReference, "EasyPaisa");
           } else {
             showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
           }
@@ -1726,10 +1792,13 @@
         }
 
         // JazzCash one-time (CNIC): no OTP screen either - deduct-amount (with
-        // paymentMethod: "jc_onetime") is synchronous, resolved by JazzCash's own
-        // pp_ResponseCode. Shown right here in the modal, no redirect.
+        // paymentMethod: "jc_onetime") now returns immediately with
+        // status: "pending" while JazzCash's MPIN-wait runs server-side in the
+        // background. Show that message right away with a loader, then poll for
+        // the real completed/failed result.
         if (provider === "jc_onetime") {
           if (!sessionId) throw new Error("sessionId is missing");
+          if (!lastReference) throw new Error("reference is missing");
 
           const cnicLastSix = $("cnicLastSix").value.trim();
           if (!cnicLastSix) throw new Error("CNIC last 6 digits are required for JazzCash one-time");
@@ -1742,6 +1811,9 @@
             showModal("ok", "Payment completed", payOut?.statusMessage || "Your JazzCash one-time payment was completed successfully.");
           } else if (payOut?.status === "failed") {
             showModal("err", "Payment failed", payOut?.statusMessage || "The transaction was rejected or could not be completed. You can try again with a different number.", null, true);
+          } else if (payOut?.status === "pending" && payOut?.success) {
+            showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
+            pollOnetimeTransactionResult(lastReference, "JazzCash");
           } else {
             showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
           }
