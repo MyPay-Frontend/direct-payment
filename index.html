@@ -33,6 +33,7 @@
       --rail-stripe: #6558f5;
       --rail-paymob: #1d8a8a;
       --rail-bongo: #c2185b;
+      --rail-payfast: #2e6bd6;
       --shadow-card: 0 1px 2px rgba(28, 35, 31, 0.04), 0 8px 24px rgba(28, 35, 31, 0.06);
       --shadow-modal: 0 24px 70px rgba(15, 20, 17, 0.28);
       --radius: 16px;
@@ -130,6 +131,7 @@
     .rails .rail-chip.stripe::before { background: var(--rail-stripe); }
     .rails .rail-chip.paymob::before { background: var(--rail-paymob); }
     .rails .rail-chip.bongo::before { background: var(--rail-bongo); }
+    .rails .rail-chip.payfast::before { background: var(--rail-payfast); }
 
     .modeToggle {
       display: inline-flex;
@@ -301,6 +303,7 @@
     .package[data-provider="stripe"] { border-left-color: var(--rail-stripe); }
     .package[data-provider="paymob"] { border-left-color: var(--rail-paymob); }
     .package[data-provider="bongo"] { border-left-color: var(--rail-bongo); }
+    .package[data-provider^="payfast_"] { border-left-color: var(--rail-payfast); }
 
     .package:hover {
       transform: translateY(-1px);
@@ -603,6 +606,7 @@
       <span class="rail-chip stripe">Stripe</span>
       <span class="rail-chip paymob">Paymob</span>
       <span class="rail-chip bongo">Bongo</span>
+      <span class="rail-chip payfast">PayFast</span>
     </div>
   </div>
 
@@ -613,7 +617,7 @@
     </div>
     <p class="modeNote" id="modeNote">
       <strong>Direct API</strong> drives payment-api's <span class="mono">/direct-payment</span> endpoints from this page.
-      <strong>Hosted Checkout</strong> creates the checkout and redirects your browser to payment-api's own JazzCash / EasyPaisa page — phone entry, OTP, wallet linking and saved-account reuse all happen there, same as a real vendor integration. Only EasyPaisa and JazzCash support this mode.
+      <strong>Hosted Checkout</strong> creates the checkout and redirects your browser to the provider's own hosted page — phone entry, OTP, wallet linking and saved-account reuse all happen there for EasyPaisa / JazzCash, same as a real vendor integration; the PayFast packages below redirect straight to PayFast's own hosted page for the picked instrument (bank, wallet, card, or Raast).
     </p>
 
     <div class="hero">
@@ -721,6 +725,42 @@
             <div class="pkgPrice">Rs 100</div>
           </div>
           <div class="pkgMeta">Currency: PKR · card only, one-time<br />Hosted Paymob Unified Checkout</div>
+        </div>
+
+        <div class="package" data-provider="payfast_bank" data-amount="1" data-currency="PKR"
+          data-payment-type="onetime" data-hosted-eligible="true" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">PayFast Bank one-time</div>
+            <div class="pkgPrice">Rs 1</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR · bank account transfer, one-time<br />Hosted PayFast Checkout</div>
+        </div>
+
+        <div class="package" data-provider="payfast_wallet" data-amount="1" data-currency="PKR"
+          data-payment-type="onetime" data-hosted-eligible="true" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">PayFast Wallet one-time</div>
+            <div class="pkgPrice">Rs 1</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR · mobile wallet debit, one-time<br />Hosted PayFast Checkout</div>
+        </div>
+
+        <div class="package" data-provider="payfast_credit_debit_card" data-amount="1" data-currency="PKR"
+          data-payment-type="onetime" data-hosted-eligible="true" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">PayFast Card one-time</div>
+            <div class="pkgPrice">Rs 1</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR · credit/debit card, one-time<br />Hosted PayFast Checkout</div>
+        </div>
+
+        <div class="package" data-provider="payfast_rast" data-amount="1" data-currency="PKR"
+          data-payment-type="onetime" data-hosted-eligible="true" tabindex="0" role="button">
+          <div class="pkgTop">
+            <div class="pkgName">PayFast Raast one-time</div>
+            <div class="pkgPrice">Rs 1</div>
+          </div>
+          <div class="pkgMeta">Currency: PKR · Raast instant payment, one-time<br />Hosted PayFast Checkout</div>
         </div>
 
         <div class="package" data-provider="bongo" data-amount="1" data-currency="BDT"
@@ -1189,10 +1229,11 @@
       });
     });
 
-    // Hosted Checkout only exists for EasyPaisa/JazzCash (the jazzcash.hbs /
-    // easypaisa.hbs pages this demo redirects into) - every other rail's package
-    // card is hidden while that mode is active, and selection falls back to the
-    // first eligible one so a stale non-eligible selection can't be submitted.
+    // Hosted Checkout is opt-in per package via data-hosted-eligible - currently
+    // EasyPaisa/JazzCash (jazzcash.hbs / easypaisa.hbs) and the PayFast one-time
+    // packages (PayFast's own hosted page). Every other rail's package card is
+    // hidden while that mode is active, and selection falls back to the first
+    // eligible one so a stale non-eligible selection can't be submitted.
     function applyFlowMode() {
       const allPackages = document.querySelectorAll(".package");
       allPackages.forEach((el) => {
@@ -1415,8 +1456,9 @@
         const reference  = generateObjectId();
         const expiresAt  = getExpiresAt(3);
 
+        const isPayfast = provider.startsWith("payfast_");
         const onetimeAmount = Number(selectedPackageEl.getAttribute("data-amount") || "0");
-        const finalAmount = (provider === "swich-card" || provider === "stripe" || provider === "paymob" || provider === "nowpayments") ? onetimeAmount || stuntPrice : stuntPrice;
+        const finalAmount = (provider === "swich-card" || provider === "stripe" || provider === "paymob" || provider === "nowpayments" || isPayfast) ? onetimeAmount || stuntPrice : stuntPrice;
         const STRIPE_MIN_AMOUNT = 200;
         const stripeAmount = Math.max(
           STRIPE_MIN_AMOUNT,
@@ -1427,7 +1469,7 @@
           paymentMethod: provider,
           reference,
           amount: finalAmount,
-          amount: provider === "stripe" ? stripeAmount : (provider === "paymob" || provider === "nowpayments" ? (onetimeAmount || stuntPrice) : stuntPrice),
+          amount: provider === "stripe" ? stripeAmount : ((provider === "paymob" || provider === "nowpayments" || isPayfast) ? (onetimeAmount || stuntPrice) : stuntPrice),
           currency,
           paymentType,
           successUrl,
@@ -1507,10 +1549,7 @@
         // has a linked wallet for this vendor). Everything from here on - phone
         // entry, OTP, wallet linking, saved-account reuse, final redirect to
         // returnUrl - happens on that real hosted page, not in this demo.
-        if (flowMode === "hosted") {
-          if (provider !== "easypaisa" && provider !== "jazzcash") {
-            throw new Error("Hosted checkout is only available for EasyPaisa and JazzCash in this demo.");
-          }
+        if (flowMode === "hosted" && (provider === "easypaisa" || provider === "jazzcash")) {
           setStatus($("status"), `Creating ${provider} checkout (hosted)...`);
           const hostedOut = await api("POST", "/checkouts", createDto);
           if (!hostedOut?.success) {
@@ -1550,9 +1589,11 @@
           return;
         }
 
-        // Stripe & NOWPayments: route through /checkouts (skips /direct-payment flow entirely)
-        if (provider === "stripe" || provider === "nowpayments") {
-          const providerName = provider === "stripe" ? "Stripe" : "NOWPayments";
+        // Stripe, NOWPayments & PayFast: route through /checkouts (skips /direct-payment
+        // flow entirely). PayFast redirects to its own hosted page for the picked
+        // instrument (bank/wallet/card/Raast), same as Stripe/Paymob.
+        if (provider === "stripe" || provider === "nowpayments" || isPayfast) {
+          const providerName = provider === "stripe" ? "Stripe" : provider === "nowpayments" ? "NOWPayments" : "PayFast";
           setStatus($("status"), `Creating ${providerName} checkout...`);
           const out = await api("POST", "/checkouts", createDto);
           if (!out?.success) {
