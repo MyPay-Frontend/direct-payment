@@ -1094,7 +1094,7 @@
     // (server.js / api/webhook.js / netlify/functions/webhook.js all implement it)
     // so payment-api's post-webhook vendor callback actually reaches us and gets acked.
     // const successUrl = `${uiBaseUrl}/api/webhook`;
-    const successUrl = `https://webhook.site/29fb2f6f-cb7d-436f-a245-f1888533aeb2`;
+    const successUrl = `https://webhook.site/03a7fdc9-4bfe-42eb-aa04-6ea58c81f7cd`;
 
     // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
     // after completing payment on the provider's hosted page.
@@ -1868,7 +1868,7 @@
           if (!fullName) throw new Error("Full Name is required for Swich Card");
 
           const pkg = selectedPackageEl;
-          const successUrl = 'https://webhook.site/daea6d0a-ae2c-42b9-9dbb-bd1cafbd9895'
+          const successUrl = 'https://webhook.site/03a7fdc9-4bfe-42eb-aa04-6ea58c81f7cd'
           const swichDto = {
             paymentMethod: "swich-card",
             reference: generateObjectId(),
