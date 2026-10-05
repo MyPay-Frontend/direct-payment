@@ -709,22 +709,56 @@
           <div class="pkgMeta">Currency: PKR · one-time CNIC-based debit<br />No wallet linking, no OTP screen — needs mobile number + last 6 digits of CNIC</div>
         </div>
 
-        <div class="package" data-provider="ep_onetime_async" data-amount="1" data-currency="PKR"
-          data-payment-type="onetime" tabindex="0" role="button">
+        <div class="package"
+          data-provider="easypaisa"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="5"
+          data-terminal-freq="30"
+          tabindex="0" role="button">
           <div class="pkgTop">
-            <div class="pkgName">EasyPaisa one-time (fire-and-forget)</div>
+            <div class="pkgName">EasyPaisa Wallet Linking (recurring)</div>
             <div class="pkgPrice">Rs 1</div>
           </div>
-          <div class="pkgMeta">Currency: PKR · calls /direct-payment/deduct-amount (now the sole one-time path)<br />Returns "pending" immediately - status resolves via payment-cron + payment-consumer</div>
+          <div style="margin: 6px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial (stunt) <span class="badge badge-stunt">Stunt</span></span>
+              <span class="mono">Rs 1 · 1d</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
+              <span class="mono">Rs 5 · 30d</span>
+            </div>
+          </div>
+          <div class="pkgMeta">First charge via the new async validate-phone-number-status flow (returns "pending" immediately, resolves via payment-cron + payment-consumer); renewals auto-debit the linked wallet.</div>
         </div>
 
-        <div class="package" data-provider="jc_onetime_async" data-amount="10" data-currency="PKR"
-          data-payment-type="onetime" tabindex="0" role="button">
+        <div class="package"
+          data-provider="jazzcash"
+          data-currency="PKR"
+          data-payment-type="irregular-recurring"
+          data-stunt-price="1"
+          data-stunt-freq="1"
+          data-terminal-price="5"
+          data-terminal-freq="30"
+          tabindex="0" role="button">
           <div class="pkgTop">
-            <div class="pkgName">JazzCash one-time (fire-and-forget)</div>
+            <div class="pkgName">JazzCash Wallet Linking (recurring)</div>
             <div class="pkgPrice">Rs 1</div>
           </div>
-          <div class="pkgMeta">Currency: PKR · calls /direct-payment/deduct-amount (now the sole one-time path)<br />Returns "pending" immediately - status resolves via payment-cron + payment-consumer</div>
+          <div style="margin: 6px 0 4px;">
+            <div class="cycleRow">
+              <span>Trial (stunt) <span class="badge badge-stunt">Stunt</span></span>
+              <span class="mono">Rs 1 · 1d</span>
+            </div>
+            <div class="cycleRow">
+              <span>Monthly <span class="badge badge-terminal">Recurring</span></span>
+              <span class="mono">Rs 5 · 30d</span>
+            </div>
+          </div>
+          <div class="pkgMeta">First-time number redirects to JazzCash's own linking page (OTP there); known number charges instantly via the saved wallet. First charge returns "pending" immediately (resolves via payment-cron + payment-consumer); renewals auto-debit the linked wallet.</div>
         </div>
 
         <div class="package" data-provider="stripe" data-amount="200" data-currency="PKR"
@@ -1112,7 +1146,7 @@
     // (server.js / api/webhook.js / netlify/functions/webhook.js all implement it)
     // so payment-api's post-webhook vendor callback actually reaches us and gets acked.
     // const successUrl = `${uiBaseUrl}/api/webhook`;
-    const successUrl = `https://webhook.site/03a7fdc9-4bfe-42eb-aa04-6ea58c81f7cd`;
+    const successUrl = `https://webhook.site/5b2becfc-e92d-4659-847d-71cf316cbba9`;
 
     // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
     // after completing payment on the provider's hosted page.
@@ -1146,7 +1180,7 @@
       } else {
         $("swichExtraFields").classList.add("hide");
       }
-      if (provider === "jc_onetime" || provider === "jc_onetime_async") {
+      if (provider === "jc_onetime") {
         $("jazzcashOnetimeExtraFields").classList.remove("hide");
       } else {
         $("jazzcashOnetimeExtraFields").classList.add("hide");
@@ -1189,7 +1223,7 @@
       el.textContent = text || "";
     }
 
-    function showModal(kind, title, text, onOk, canRetry = false) {
+    function showModal(kind, title, text, onOk, canRetry = false, retryTarget = "step2") {
       const overlay = $("modalOverlay");
       $("modalTitleText").textContent = title;
       $("modalTxt").textContent = text || "";
@@ -1219,8 +1253,18 @@
         okBtn.textContent = "Close";
         retryBtn.onclick = () => {
           overlay.style.display = "none";
-          showStep2();
-          setStatus($("status2"), "");
+          if (retryTarget === "otp") {
+            // Same checkoutId/phone/email are still valid (backend reset the
+            // checkout back to pending for exactly this) - just let the
+            // customer re-enter the OTP instead of redoing the phone-number
+            // step and triggering a brand new OTP send.
+            $("otp").value = "";
+            showOtpStep();
+            setStatus($("statusOtp"), "Please re-enter the OTP and try again.");
+          } else {
+            showStep2();
+            setStatus($("status2"), "");
+          }
         };
       } else {
         retryBtn.style.display = "none";
@@ -1397,32 +1441,6 @@
       });
     }
 
-    // EasyPaisa one-time (MA), fire-and-forget test package - /direct-payment/deduct-amount/onetime
-    // was removed; the async one-time flow is now merged into /direct-payment/deduct-amount
-    // itself (paymentMethod "ep_onetime" always resolves to the fire-and-forget path there).
-    // This always leaves the transaction/checkout as "pending" and returns immediately - the
-    // real status is resolved later by payment-cron's poller + payment-consumer's inquiry
-    // consumer, same as pollOnetimeTransactionResult() below expects.
-    async function easypaisaOnetimeDeductAsync(checkoutId, mobileAccountNo, email) {
-      return api("POST", "/direct-payment/deduct-amount", {
-        paymentMethod: "ep_onetime",
-        checkoutId,
-        mobileAccountNo,
-        email,
-      });
-    }
-
-    // JazzCash one-time (CNIC), fire-and-forget test package - same
-    // /direct-payment/deduct-amount endpoint as above, paymentMethod "jc_onetime".
-    async function jazzcashOnetimeDeductAsync(checkoutId, mobileAccountNo, cnicLastSix) {
-      return api("POST", "/direct-payment/deduct-amount", {
-        paymentMethod: "jc_onetime",
-        checkoutId,
-        mobileAccountNo,
-        cnicLastSix,
-      });
-    }
-
     // Both ep_onetime and jc_onetime now hand the actual EasyPaisa/JazzCash
     // approval-wait off to a background job on the server and answer
     // deduct-amount immediately with status: "pending". The vendor's real
@@ -1432,7 +1450,11 @@
     // signature) every few seconds until the Transaction row flips to
     // completed/failed, and updates the modal accordingly.
     const ONETIME_POLL_INTERVAL_MS = 3000;
-    const ONETIME_POLL_MAX_ATTEMPTS = 40; // ~2 minutes - comfortably past the backend's 90s EasyPaisa/JazzCash timeout
+    // ~2 minutes of UI-side polling. Backend timeouts vary by payment method
+    // (ep_onetime/jc_onetime: 5 min, easypaisa linked: 90s, jazzcash linked:
+    // 10 min) - this cap just stops the demo page from polling forever; if it
+    // runs out first, the "still processing" message is accurate, not a bug.
+    const ONETIME_POLL_MAX_ATTEMPTS = 40;
 
     async function pollOnetimeTransactionResult(reference, providerLabel) {
       for (let attempt = 1; attempt <= ONETIME_POLL_MAX_ATTEMPTS; attempt++) {
@@ -1509,17 +1531,8 @@
           Number(selectedPackageEl.getAttribute("data-amount") || STRIPE_MIN_AMOUNT)
         );
 
-        // ep_onetime_async / jc_onetime_async are UI-only labels for the
-        // fire-and-forget test packages (branch on `provider` further down) -
-        // payment-api only knows the underlying TRANSACTION_TYPE values, so the
-        // paymentMethod actually sent on the wire is always "ep_onetime"/"jc_onetime".
-        const wirePaymentMethod =
-          provider === "ep_onetime_async" ? "ep_onetime" :
-          provider === "jc_onetime_async" ? "jc_onetime" :
-          provider;
-
         const createDto = {
-          paymentMethod: wirePaymentMethod,
+          paymentMethod: provider,
           reference,
           amount: finalAmount,
           amount: provider === "stripe" ? stripeAmount : ((provider === "paymob" || provider === "nowpayments" || isPayfast) ? (onetimeAmount || stuntPrice) : stuntPrice),
@@ -1532,7 +1545,11 @@
 
         const hasCycles = selectedPackageEl.getAttribute("data-has-cycles") === "true";
 
-        if (provider === "easypaisa" || provider === "jazzcash") {
+        // Token-linked one-time packages (the "Wallet Linking" cards) share
+        // provider="easypaisa"/"jazzcash" with the recurring subscription
+        // cards above, but must NOT get a subscription object attached - skip
+        // this whole block when paymentType is "onetime".
+        if ((provider === "easypaisa" || provider === "jazzcash") && paymentType !== "onetime") {
           if (paymentType === "recurring" && hasCycles) {
             createDto.subscription = {
               referenceId: generateObjectId(),
@@ -1681,7 +1698,7 @@
         // "ep_onetime" directly (createDto.paymentMethod already equals provider),
         // which payment-api's CheckoutsService stores as-is on the checkout row.
         // Only what happens after step 2 (submit phone) differs.
-        if (provider === "ep_onetime" || provider === "ep_onetime_async") {
+        if (provider === "ep_onetime") {
           setStatus($("status"), "Creating EasyPaisa checkout...");
           const onetimeOut = await api("POST", "/direct-payment/session", createDto);
           if (!onetimeOut?.success) throw new Error(onetimeOut?.message || "Session creation failed");
@@ -1698,7 +1715,7 @@
         // JazzCash one-time (CNIC): same /direct-payment/session call as every other
         // rail here - paymentMethod "jc_onetime" is stored as-is on the checkout row.
         // Step 2 collects mobile number + CNIC last 6 digits instead of an OTP.
-        if (provider === "jc_onetime" || provider === "jc_onetime_async") {
+        if (provider === "jc_onetime") {
           setStatus($("status"), "Creating JazzCash checkout...");
           const onetimeOut = await api("POST", "/direct-payment/session", createDto);
           if (!onetimeOut?.success) throw new Error(onetimeOut?.message || "Session creation failed");
@@ -1718,6 +1735,10 @@
 
         if (!out?.checkoutId) throw new Error("checkoutId is missing");
         sessionId = out.checkoutId;
+        // Needed to poll GET /transactions/:reference for providers whose
+        // deduct-amount/initiate-wallet-linking now return "pending"
+        // immediately (easypaisa/jazzcash token-linked charges included).
+        lastReference = reference;
         setStatus($("status"), `Session created. checkoutId: ${sessionId}`);
         showStep2();
         openFlowModal();
@@ -1858,7 +1879,7 @@
         lastEmail = $("email").value.trim();
 
         if (!lastPhone) throw new Error("phoneNumber is required");
-        if (!lastEmail && (provider === "easypaisa" || provider === "ep_onetime" || provider === "ep_onetime_async")) throw new Error("Email is required for EasyPaisa");
+        if (!lastEmail && (provider === "easypaisa" || provider === "ep_onetime")) throw new Error("Email is required for EasyPaisa");
 
         // EasyPaisa one-time (MA): no OTP screen at all - deduct-amount (with
         // paymentMethod: "ep_onetime") now returns immediately with
@@ -1877,26 +1898,6 @@
           } else if (payOut?.status === "failed") {
             showModal("err", "Payment failed", payOut?.statusMessage || "The transaction was rejected, expired, or could not be completed. You can try again with a different number.", null, true);
           } else if (payOut?.status === "pending" && payOut?.success) {
-            showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
-            pollOnetimeTransactionResult(lastReference, "EasyPaisa");
-          } else {
-            showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
-          }
-          return;
-        }
-
-        // EasyPaisa one-time, fire-and-forget test package: hits
-        // /direct-payment/deduct-amount, which always returns
-        // status: "pending" immediately (it never waits on EasyPaisa at all).
-        // Poll for the real result the same way as the ep_onetime package above.
-        if (provider === "ep_onetime_async") {
-          if (!sessionId) throw new Error("sessionId is missing");
-          if (!lastReference) throw new Error("reference is missing");
-
-          setStatus($("status2"), "Sending payment request to EasyPaisa (fire-and-forget)...");
-          const payOut = await easypaisaOnetimeDeductAsync(sessionId, lastPhone, lastEmail);
-
-          if (payOut?.status === "pending" && payOut?.success) {
             showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
             pollOnetimeTransactionResult(lastReference, "EasyPaisa");
           } else {
@@ -1926,30 +1927,6 @@
           } else if (payOut?.status === "failed") {
             showModal("err", "Payment failed", payOut?.statusMessage || "The transaction was rejected or could not be completed. You can try again with a different number.", null, true);
           } else if (payOut?.status === "pending" && payOut?.success) {
-            showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
-            pollOnetimeTransactionResult(lastReference, "JazzCash");
-          } else {
-            showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
-          }
-          return;
-        }
-
-        // JazzCash one-time (CNIC), fire-and-forget test package: hits
-        // /direct-payment/deduct-amount, which always returns
-        // status: "pending" immediately. Poll for the real result the same way
-        // as the jc_onetime package above.
-        if (provider === "jc_onetime_async") {
-          if (!sessionId) throw new Error("sessionId is missing");
-          if (!lastReference) throw new Error("reference is missing");
-
-          const cnicLastSix = $("cnicLastSix").value.trim();
-          if (!cnicLastSix) throw new Error("CNIC last 6 digits are required for JazzCash one-time");
-          if (!/^\d{6}$/.test(cnicLastSix)) throw new Error("CNIC last 6 digits must be exactly 6 digits");
-
-          setStatus($("status2"), "Sending payment request to JazzCash (fire-and-forget)...");
-          const payOut = await jazzcashOnetimeDeductAsync(sessionId, lastPhone, cnicLastSix);
-
-          if (payOut?.status === "pending" && payOut?.success) {
             showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
             pollOnetimeTransactionResult(lastReference, "JazzCash");
           } else {
@@ -2000,19 +1977,20 @@
           email: provider === "easypaisa" ? lastEmail : undefined,
         });
 
-        // Wallet already linked — make payment directly
+        // Wallet already linked — make payment directly. deduct-amount for
+        // easypaisa/jazzcash now always returns "pending" immediately (same
+        // async pattern as ep_onetime/jc_onetime) - poll for the real result.
         if (out?.success === true && out?.action === "payment-required" && out?.walletId) {
           console.log("Response: ", out)
           walletId = out.walletId;
           setStatus($("status2"), "Processing payment...");
           const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
           console.log("PayOut Response: ", payOut)
-          if (payOut?.transactionId) {
-            if (payOut.status === "completed") showModal("ok", "Payment completed", "Payment has been completed successfully.");
-            else if (payOut.status === "pending") showModal("err", "Payment pending", "Transaction is still pending. Please check again after a few seconds.");
-            else showModal("err", "Payment failed", "Payment failed. You can try with a different number.", null, true);
+          if (payOut?.status === "pending" && payOut?.success) {
+            showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
+            pollOnetimeTransactionResult(lastReference, provider === "jazzcash" ? "JazzCash" : "EasyPaisa");
           } else {
-            showModal("err", "Payment failed", payOut?.message || "Payment failed.", null, true);
+            showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
           }
           return;
         }
@@ -2083,7 +2061,13 @@
 
         setStatus($("statusOtp"), "Verifying OTP...");
 
-        // EasyPaisa linking-required => call initiate-wallet-linking with OTP
+        // EasyPaisa linking-required => call initiate-wallet-linking with OTP.
+        // Backend races this against a 5s timeout: a fast, known failure
+        // (wrong/expired OTP, inactive account) comes back as success:false
+        // immediately, with the checkout reset to pending so the SAME
+        // checkoutId can be retried. A fast success, or no response yet after
+        // 5s, both come back as success:true/status:"pending" and resolve the
+        // normal async way - poll for that like every other async result.
         if (provider === "easypaisa" && $("otpTitle").textContent.includes("linking")) {
           if (!email) throw new Error("email is required for EasyPaisa linking");
           const out = await api("POST", "/direct-payment/initiate-wallet-linking", {
@@ -2093,12 +2077,16 @@
             otp,
             email,
           });
-          if (out?.success === true) {
-            console.log("Easypaisa Initiate :" , out)
-            showModal("ok", "Payment completed", out?.message || "Wallet linked and payment completed successfully.");
+          console.log("Easypaisa Initiate :", out)
+          if (out?.status === "pending" && out?.success) {
+            showModal("pending", "Processing your payment", out?.statusMessage || "Your wallet is being linked and your payment is being processed. You will be notified once it completes.");
+            pollOnetimeTransactionResult(lastReference, "EasyPaisa");
             return;
           }
-          showModal("err", "Payment failed", out?.message || "Payment failed.", null, true);
+          // Fast known failure - checkoutId/phone/email are all still valid
+          // (backend reset the checkout to pending), so let the customer
+          // retry by just re-entering the OTP, not the whole phone step.
+          showModal("err", "Payment failed", out?.message || out?.statusMessage || "Payment failed.", null, true, "otp");
           return;
         }
 
@@ -2115,12 +2103,11 @@
           if (!walletId) throw new Error("walletId missing in OTP verification response");
           setStatus($("statusOtp"), "OTP verified. Processing payment...");
           const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
-          if (payOut?.transactionId) {
-            if (payOut.status === "completed") showModal("ok", "Payment completed", "Payment has been completed successfully.");
-            else if (payOut.status === "pending") showModal("err", "Payment pending", "Transaction is still pending. Please check again after a few seconds.");
-            else showModal("err", "Payment failed", "Payment failed. You can try with a different number.", null, true);
+          if (payOut?.status === "pending" && payOut?.success) {
+            showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
+            pollOnetimeTransactionResult(lastReference, provider === "jazzcash" ? "JazzCash" : "EasyPaisa");
           } else {
-            showModal("err", "Payment failed", payOut?.message || "Payment failed.", null, true);
+            showModal("err", "Payment failed", payOut?.message || payOut?.statusMessage || "Payment failed.", null, true);
           }
           return;
         }
