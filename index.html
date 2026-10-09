@@ -922,6 +922,50 @@
 
       <div class="status" id="status"></div>
     </div>
+
+    <!-- Manual renewal payment. Deliberately outside the checkout flow above:
+         it acts on a subscription that already exists, so the rail picked in
+         step 01 has no bearing on it. -->
+    <div class="card" id="manualRenewalCard">
+      <div class="section-label"><span class="num">04</span>Manual renewal payment</div>
+
+      <div class="sandboxInfo">
+        <strong>Vendor-triggered charge</strong> against a subscription's currently-due renewal, using its stored
+        token — either an early payment, or a discounted retry after one has already failed.<br />
+        EasyPaisa and JazzCash only &nbsp;·&nbsp; <strong>amount 0</strong> settles the cycle as a free one, with no
+        gateway call at all &nbsp;·&nbsp; any amount is allowed, above or below the renewal's own price.
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Subscription ID <span class="req">*</span></label>
+          <input id="mrSubscriptionId" placeholder="uuid of an existing subscription" />
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button id="btnFindRenewal" class="ghost" style="width:100%;">Find the renewal that is due</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Renewal ID <span class="req">*</span></label>
+          <input id="mrRenewalId" placeholder="filled in by the lookup above" />
+        </div>
+        <div>
+          <label>Amount in PKR <span class="req">*</span></label>
+          <input id="mrAmount" type="number" min="0" step="0.01" placeholder="800" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnChargeRenewal" class="primary">Charge this renewal</button>
+        <button id="btnAmtFree" class="ghost">Set 0 — free cycle</button>
+        <button id="btnAmtFull" class="ghost">Set full price</button>
+        <button id="btnAmt80" class="ghost">Set 80%</button>
+      </div>
+
+      <div class="status" id="mrStatus"></div>
+    </div>
   </div>
 
   <footer class="foot">mypay · payment-api sandbox — for internal testing only</footer>
@@ -1146,7 +1190,7 @@
     // (server.js / api/webhook.js / netlify/functions/webhook.js all implement it)
     // so payment-api's post-webhook vendor callback actually reaches us and gets acked.
     // const successUrl = `${uiBaseUrl}/api/webhook`;
-    const successUrl = `https://webhook.site/5b2becfc-e92d-4659-847d-71cf316cbba9`;
+    const successUrl = `https://humble-snow-82.webhook.cool`;
 
     // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
     // after completing payment on the provider's hosted page.
@@ -2121,6 +2165,141 @@
       } catch (e) {
         setStatus($("statusOtp"), `Error: ${String(e.message || e)}`);
       }
+    });
+
+    /* ─────────────────────── Manual renewal payment ───────────────────────
+       GET  /subscription/{subscriptionId}/renewals/current   — API key only
+       POST /direct-payment/renewals/{renewalId}/manual-payment — API key + signature
+
+       Both are synchronous: the final result comes back in the same response,
+       the way deduct-amount does. Nothing here touches the checkout flow above. */
+
+    // Same auth as api(), but hands back the status and body rather than throwing.
+    // A testbed has to show 400/401/409 as plainly as it shows 200, and api()
+    // collapses all of them into one Error.
+    async function apiRaw(method, path, body) {
+      const xTimestamp = new Date().toISOString();
+      const xSignature = generateSignature(body ?? {}, xTimestamp);
+
+      const res = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": CONFIG.mycoApiKey.trim(),
+          "X-Api-Signature": xSignature,
+          "X-Timestamp": xTimestamp,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      const text = await res.text();
+      let data = null;
+      try { data = JSON.parse(text); } catch (e) { }
+      return { status: res.status, ok: res.ok, data, text };
+    }
+
+    // Held so the amount shortcuts know the renewal's own price.
+    let mrCurrentRenewal = null;
+
+    $("btnFindRenewal").addEventListener("click", async () => {
+      const out = $("mrStatus");
+      const subscriptionId = $("mrSubscriptionId").value.trim();
+      if (!subscriptionId) return setStatus(out, "Enter a subscription ID first.");
+
+      setStatus(out, "Looking up the renewal that is currently due…");
+      try {
+        const r = await apiRaw("GET", `/subscription/${encodeURIComponent(subscriptionId)}/renewals/current`);
+
+        if (!r.ok) {
+          return setStatus(out, `${r.status}\n${r.text || "(empty body)"}`);
+        }
+
+        // A subscription with nothing active returns null, not an error.
+        if (!r.data || !r.data.renewalId) {
+          mrCurrentRenewal = null;
+          return setStatus(out, `${r.status}\nNo renewal is currently active for this subscription — there is nothing to charge.`);
+        }
+
+        mrCurrentRenewal = r.data;
+        $("mrRenewalId").value = r.data.renewalId;
+        if (r.data.price != null) $("mrAmount").value = r.data.price;
+
+        setStatus(out,
+          `${r.status} — renewal found, copied into the fields below.\n\n` +
+          `renewalId     ${r.data.renewalId}\n` +
+          `price         ${r.data.price}\n` +
+          `renewalDate   ${r.data.renewalDate}\n` +
+          `paymentMethod ${r.data.paymentMethod}\n` +
+          `isRetry       ${r.data.isRetry}\n` +
+          `retryCount    ${r.data.retryCount}\n\n` +
+          (r.data.isRetry
+            ? "This is a retry row — the original cycle already failed, so this is the post-failure discount case."
+            : "This is the original cycle, not a retry — the early-payment case.") +
+          `\n\nAmount is prefilled with the renewal's own price. Change it to charge more or less.`);
+      } catch (e) {
+        setStatus(out, `Request failed before a response came back: ${String(e.message || e)}`);
+      }
+    });
+
+    $("btnChargeRenewal").addEventListener("click", async () => {
+      const out = $("mrStatus");
+      const renewalId = $("mrRenewalId").value.trim();
+      const rawAmount = $("mrAmount").value;
+
+      if (!renewalId) return setStatus(out, "Enter a renewal ID — the lookup above fills it in.");
+      if (rawAmount === "") return setStatus(out, "Enter an amount. 0 is valid: it means a free cycle.");
+
+      const amount = Number(rawAmount);
+      if (!Number.isFinite(amount) || amount < 0) return setStatus(out, "Amount must be 0 or more.");
+
+      setStatus(out, amount === 0
+        ? "Settling this cycle as a free one — no gateway call…"
+        : `Charging ${amount} PKR against the stored token…`);
+
+      try {
+        const r = await apiRaw("POST", `/direct-payment/renewals/${encodeURIComponent(renewalId)}/manual-payment`, { amount });
+
+        let verdict;
+        if (r.ok && r.data) {
+          if (amount === 0) {
+            verdict = "Free cycle. No gateway call was made — the renewal is marked completed, the subscription's grace state reset, and the webhook already sent.";
+          } else if (r.data.success) {
+            verdict = "Charged. Renewal marked completed, grace state reset, success webhook sent.";
+          } else {
+            verdict = "Charge failed. The renewal was reverted to 'active' so the automatic cycle can still retry it, and no retry-chain row was created.";
+          }
+        } else if (r.status === 409) {
+          verdict = "Conflict — the row is already locked ('pending'). Either another manual call is in flight, or the hourly cron took it first.";
+        } else if (r.status === 400) {
+          verdict = "Usually means the renewal is not 'active', or its payment method is not EasyPaisa/JazzCash.";
+        } else if (r.status === 401) {
+          verdict = "Signature or API key rejected. Check that config.js holds this vendor's key, and that your clock is within 5 minutes of the server's.";
+        } else if (r.status === 404) {
+          verdict = "No renewal with that ID belongs to this vendor.";
+        } else {
+          verdict = "";
+        }
+
+        setStatus(out,
+          `${r.status}\n${r.text || "(empty body)"}\n\n` +
+          (verdict ? verdict + "\n\n" : "") +
+          `The failure reason is not in this response. failureCode and failureMessage reach the vendor on the ` +
+          `webhook instead, nested under paymentInfo — watch this demo's webhook receiver, or the mypay_webhook table.`);
+      } catch (e) {
+        setStatus(out, `Request failed before a response came back: ${String(e.message || e)}`);
+      }
+    });
+
+    $("btnAmtFree").addEventListener("click", () => { $("mrAmount").value = 0; });
+
+    $("btnAmtFull").addEventListener("click", () => {
+      if (!mrCurrentRenewal) return setStatus($("mrStatus"), "Run the lookup first — the renewal's price comes from it.");
+      $("mrAmount").value = mrCurrentRenewal.price;
+    });
+
+    $("btnAmt80").addEventListener("click", () => {
+      if (!mrCurrentRenewal) return setStatus($("mrStatus"), "Run the lookup first — the renewal's price comes from it.");
+      $("mrAmount").value = Math.round(Number(mrCurrentRenewal.price) * 0.8 * 100) / 100;
     });
   </script>
 
