@@ -614,10 +614,12 @@
     <div class="modeToggle" role="tablist" aria-label="Flow mode">
       <button type="button" class="modeBtn active" id="modeBtnDirect" data-mode="direct" role="tab" aria-selected="true">Direct API</button>
       <button type="button" class="modeBtn" id="modeBtnHosted" data-mode="hosted" role="tab" aria-selected="false">Hosted Checkout</button>
+      <button type="button" class="modeBtn" id="modeBtnHostedV2" data-mode="hostedV2" role="tab" aria-selected="false">Hosted Checkout V2</button>
     </div>
     <p class="modeNote" id="modeNote">
       <strong>Direct API</strong> drives payment-api's <span class="mono">/direct-payment</span> endpoints from this page.
       <strong>Hosted Checkout</strong> creates the checkout and redirects your browser to the provider's own hosted page — phone entry, OTP, wallet linking and saved-account reuse all happen there for EasyPaisa / JazzCash, same as a real vendor integration; the PayFast packages below redirect straight to PayFast's own hosted page for the picked instrument (bank, wallet, card, or Raast).
+      <strong>Hosted Checkout V2</strong> does the same through <span class="mono">POST /v2/checkouts</span>, which returns a hosted URL carrying a signed <span class="mono">t</span> token; it covers only EasyPaisa / JazzCash wallet linking, EasyPaisa / JazzCash one-time and Stripe (manual-renewal and other rails are not available there).
     </p>
 
     <div class="hero">
@@ -691,7 +693,7 @@
           <div class="pkgMeta">Stunt + terminal retries: 25/50/75/100/125h (sandbox: 10 min each)</div>
         </div>
 
-        <div class="package" data-provider="ep_onetime" data-amount="1" data-currency="PKR"
+        <div class="package" data-provider="ep_onetime" data-hosted-v2="true" data-amount="1" data-currency="PKR"
           data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">EasyPaisa one-time (MA)</div>
@@ -700,7 +702,7 @@
           <div class="pkgMeta">Currency: PKR · one-time push-to-app debit<br />No wallet linking, no OTP screen — approve in your own EasyPaisa app</div>
         </div>
 
-        <div class="package" data-provider="jc_onetime" data-amount="10" data-currency="PKR"
+        <div class="package" data-provider="jc_onetime" data-hosted-v2="true" data-amount="10" data-currency="PKR"
           data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">JazzCash one-time (CNIC)</div>
@@ -717,6 +719,7 @@
           data-stunt-freq="1"
           data-terminal-price="5"
           data-terminal-freq="30"
+          data-hosted-v2="true"
           tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">EasyPaisa Wallet Linking (recurring)</div>
@@ -743,6 +746,7 @@
           data-stunt-freq="1"
           data-terminal-price="5"
           data-terminal-freq="30"
+          data-hosted-v2="true"
           tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">JazzCash Wallet Linking (recurring)</div>
@@ -761,7 +765,7 @@
           <div class="pkgMeta">First-time number redirects to JazzCash's own linking page (OTP there); known number charges instantly via the saved wallet. First charge returns "pending" immediately (resolves via payment-cron + payment-consumer); renewals auto-debit the linked wallet.</div>
         </div>
 
-        <div class="package" data-provider="stripe" data-amount="200" data-currency="PKR"
+        <div class="package" data-provider="stripe" data-hosted-v2="true" data-amount="200" data-currency="PKR"
           data-payment-type="onetime" tabindex="0" role="button">
           <div class="pkgTop">
             <div class="pkgName">Stripe one-time</div>
@@ -1200,7 +1204,16 @@
 
     const $ = (id) => document.getElementById(id);
     let provider = "easypaisa";
-    let flowMode = "direct"; // "direct" | "hosted"
+    let flowMode = "direct"; // "direct" | "hosted" | "hostedV2"
+    const isHostedMode = () => flowMode === "hosted" || flowMode === "hostedV2";
+    // Hosted V2 hits /v2/checkouts (signed `t` token in the returned URL); v1 hosted uses /checkouts.
+    const checkoutsPath = () => (flowMode === "hostedV2" ? "/v2/checkouts" : "/checkouts");
+    // V2 supports only the packages tagged data-hosted-v2 (wallet-linking EasyPaisa/JazzCash,
+    // ep_onetime, jc_onetime, Stripe); the manual-renewal cards and the rest stay v1/direct only.
+    const isPackageHostedEligible = (el) =>
+      flowMode === "hostedV2"
+        ? el.getAttribute("data-hosted-v2") === "true"
+        : el.getAttribute("data-hosted-eligible") === "true";
     let selectedPackageEl = document.querySelector(".package.active");
     let sessionId = "";
     let walletId = "";
@@ -1343,11 +1356,12 @@
     function applyFlowMode() {
       const allPackages = document.querySelectorAll(".package");
       allPackages.forEach((el) => {
-        const eligible = el.getAttribute("data-hosted-eligible") === "true";
-        el.classList.toggle("hostedHidden", flowMode === "hosted" && !eligible);
+        el.classList.toggle("hostedHidden", isHostedMode() && !isPackageHostedEligible(el));
       });
-      if (flowMode === "hosted" && (!selectedPackageEl || selectedPackageEl.getAttribute("data-hosted-eligible") !== "true")) {
-        const firstEligible = document.querySelector('.package[data-hosted-eligible="true"]');
+      // Manual renewal acts on an existing subscription and is not part of the V2 flow.
+      $("manualRenewalCard").classList.toggle("hide", flowMode === "hostedV2");
+      if (isHostedMode() && (!selectedPackageEl || !isPackageHostedEligible(selectedPackageEl))) {
+        const firstEligible = [...allPackages].find(isPackageHostedEligible);
         if (firstEligible) {
           allPackages.forEach((x) => x.classList.remove("active"));
           firstEligible.classList.add("active");
@@ -1357,22 +1371,16 @@
       }
     }
 
-    $("modeBtnDirect").addEventListener("click", () => {
-      flowMode = "direct";
-      $("modeBtnDirect").classList.add("active");
-      $("modeBtnHosted").classList.remove("active");
-      $("modeBtnDirect").setAttribute("aria-selected", "true");
-      $("modeBtnHosted").setAttribute("aria-selected", "false");
-      applyFlowMode();
-    });
-
-    $("modeBtnHosted").addEventListener("click", () => {
-      flowMode = "hosted";
-      $("modeBtnHosted").classList.add("active");
-      $("modeBtnDirect").classList.remove("active");
-      $("modeBtnHosted").setAttribute("aria-selected", "true");
-      $("modeBtnDirect").setAttribute("aria-selected", "false");
-      applyFlowMode();
+    document.querySelectorAll(".modeBtn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        flowMode = btn.getAttribute("data-mode");
+        document.querySelectorAll(".modeBtn").forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", String(on));
+        });
+        applyFlowMode();
+      });
     });
 
     $("paymobAddressToggle").addEventListener("click", () => {
@@ -1663,13 +1671,14 @@
         // has a linked wallet for this vendor). Everything from here on - phone
         // entry, OTP, wallet linking, saved-account reuse, final redirect to
         // returnUrl - happens on that real hosted page, not in this demo.
-        if (flowMode === "hosted" && (provider === "easypaisa" || provider === "jazzcash")) {
-          setStatus($("status"), `Creating ${provider} checkout (hosted)...`);
-          const hostedOut = await api("POST", "/checkouts", createDto);
+        if (isHostedMode() && (provider === "easypaisa" || provider === "jazzcash" ||
+            (flowMode === "hostedV2" && (provider === "ep_onetime" || provider === "jc_onetime")))) {
+          setStatus($("status"), `Creating ${provider} checkout (${flowMode === "hostedV2" ? "hosted v2" : "hosted"})...`);
+          const hostedOut = await api("POST", checkoutsPath(), createDto);
           if (!hostedOut?.success) {
             throw new Error(hostedOut?.message || hostedOut?.myPayResponseDesc || "Hosted checkout creation failed");
           }
-          if (!hostedOut?.checkoutUrl) throw new Error("checkoutUrl is missing in /checkouts response");
+          if (!hostedOut?.checkoutUrl) throw new Error(`checkoutUrl is missing in ${checkoutsPath()} response`);
           rememberCheckoutReference(reference, provider);
           setStatus($("status"), "Redirecting to hosted checkout...");
           window.location.href = hostedOut.checkoutUrl;
@@ -1709,7 +1718,7 @@
         if (provider === "stripe" || provider === "nowpayments" || isPayfast) {
           const providerName = provider === "stripe" ? "Stripe" : provider === "nowpayments" ? "NOWPayments" : "PayFast";
           setStatus($("status"), `Creating ${providerName} checkout...`);
-          const out = await api("POST", "/checkouts", createDto);
+          const out = await api("POST", checkoutsPath(), createDto);
           if (!out?.success) {
             throw new Error(out?.message || out?.myPayResponseDesc || `${providerName} checkout creation failed`);
           }
