@@ -2037,7 +2037,7 @@
           console.log("Response: ", out)
           walletId = out.walletId;
           setStatus($("status2"), "Processing payment...");
-          const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
+          const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, ...(lastEmail ? { email: lastEmail } : {}) });
           console.log("PayOut Response: ", payOut)
           if (payOut?.status === "pending" && payOut?.success) {
             showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
@@ -2155,7 +2155,7 @@
           walletId = out.walletId;
           if (!walletId) throw new Error("walletId missing in OTP verification response");
           setStatus($("statusOtp"), "OTP verified. Processing payment...");
-          const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, email: lastEmail });
+          const payOut = await api("POST", "/direct-payment/deduct-amount", { paymentMethod: provider, checkoutId: sessionId, walletId, ...(lastEmail ? { email: lastEmail } : {}) });
           if (payOut?.status === "pending" && payOut?.success) {
             showModal("pending", "Processing your payment", payOut?.statusMessage || "Your transaction is currently being processed. Please wait a moment - you will be notified shortly once it has completed or failed.");
             pollOnetimeTransactionResult(lastReference, provider === "jazzcash" ? "JazzCash" : "EasyPaisa");
