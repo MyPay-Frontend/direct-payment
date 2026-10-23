@@ -1194,7 +1194,7 @@
     // (server.js / api/webhook.js / netlify/functions/webhook.js all implement it)
     // so payment-api's post-webhook vendor callback actually reaches us and gets acked.
     // const successUrl = `${uiBaseUrl}/api/webhook`;
-    const successUrl = `https://humble-snow-82.webhook.cool`;
+    const successUrl = `https://webhook.site/4efe398f-3592-4583-b430-de9628f9599a`;
 
     // returnUrl becomes checkout.returnUrl - where the customer's browser is redirected
     // after completing payment on the provider's hosted page.
@@ -1702,7 +1702,7 @@
             reference,
             paymentMethod: "bongo",
             successUrl,
-            returnUrl: 'https://heliolatrous-marceline-nondefined.ngrok-free.dev/',
+            returnUrl: 'https://webhook.site/4efe398f-3592-4583-b430-de9628f9599a',
             ...(bongoPackageId ? { bongoPackageId } : {}),
           };
 
@@ -1995,7 +1995,7 @@
           if (!fullName) throw new Error("Full Name is required for Swich Card");
 
           const pkg = selectedPackageEl;
-          const successUrl = 'https://webhook.site/9f51b141-2cba-4469-96fd-dee558d93642'
+          const successUrl = 'https://webhook.site/4efe398f-3592-4583-b430-de9628f9599a'
           const swichDto = {
             paymentMethod: "swich-card",
             reference: generateObjectId(),
